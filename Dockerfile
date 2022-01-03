@@ -3,6 +3,8 @@ FROM ubuntu:latest
 MAINTAINER T N <tjnewman2013@gmail.com>
 
 RUN apt-get update && apt-get install -y \
+  sudo \
+  git \
   nasm \
   qemu-system-x86 \
   qemu-system-arm \
@@ -13,9 +15,18 @@ RUN apt-get update && apt-get install -y \
   valgrind \
   python3
 
-WORKDIR /N00bOS
+RUN addgroup --gid {GROUPID} devuser
 
-COPY . /N00bOS
+# Add 'devuser' with password 'devuser' with home directory and add to sudo group
+RUN useradd --home-dir /home/devuser --create-home --shell /bin/bash --uid {USERID} --gid {GROUPID} devuser \
+  && echo "devuser:devuser" | chpasswd \
+  && adduser devuser sudo
+
+RUN mkdir -p /home/devuser/N00bOS
+
+WORKDIR /home/devuser/N00bOS
+
+USER devuser
 
 ENTRYPOINT ["/bin/bash"]
 
