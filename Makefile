@@ -46,8 +46,6 @@ IMAGE := $(REGISTRY)/$(MODULE)
 
 .PHONY: docker-build
 docker-build:
-	@echo $(UID)
-	@echo $(GID)
 	@echo "\n${BLUE}Building docker image with labels:\n"
 	@echo "name: $(MODULE)"
 	@echo "version: $(TAG)${NC}\n"
