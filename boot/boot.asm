@@ -4,10 +4,22 @@
 ; Interrupts reference
 ; http://www.ctyme.com/intr/int.htm
 
-ORG 0x7c00 ; BIOS looks for something to run at this address
+ORG 0 ; BIOS looks for something to run at this address
 BITS 16 ; Running in 16 bit Real mode
 
+jmp 0x7c0:start ; code segment starts at 0x7c0, offset is at the start label to start executing
+
 start:
+    ; first explicitly set the segment registers as there is no guarantee as to what they will be set to
+    cli ; disable hw interrupts via interrupt flag
+    mov ax, 0x7c0 ; cannot mov directly into the segment registers
+    mov ds, ax ; set to 0x7c0
+    mov es, ax ; set to 0x7c0
+    mov ax, 0x00
+    mov ss, ax ; set to 0x00
+    mov sp, 0x7c00
+    sti ; enable hw interrupts via interrupt flag
+    ; second do the rest
     mov si, message
     call print
     jmp $ ; unconditional jump to the same line i.e. loop forever
