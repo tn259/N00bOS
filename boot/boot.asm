@@ -49,6 +49,8 @@ start:
     mov bx, buffer ; es is already set to 0x7c0
     int 0x13 ; issue interrupt
     jc ._error ; jump on carry i.e. failure
+    mov si, buffer
+    call print
     jmp $ ; unconditional jump to the same line i.e. loop forever
 
 ._error:
