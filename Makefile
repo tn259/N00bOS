@@ -33,6 +33,10 @@ version:
 boot: bindir
 	$(MAKE) -C ./boot
 
+.PHONY: run-x86
+run-x86: boot
+	@qemu-system-x86_64 -nographic -hda $(BIN_DIR)/boot.bin # "Ctrl-A X" to exit from nographical
+
 .PHONY: all
 all: boot
 
