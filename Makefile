@@ -37,6 +37,10 @@ boot: bindir
 run-x86: boot
 	@qemu-system-x86_64 -nographic -hda $(BIN_DIR)/boot.bin # "Ctrl-A X" to exit from nographical
 
+.PHONY: clean
+clean:
+	@rm -rf $(BIN_DIR)
+
 .PHONY: all
 all: boot
 

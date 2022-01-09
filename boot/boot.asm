@@ -74,6 +74,15 @@ load32:
     mov gs, ax
     mov ebp, 0x00200000
     mov esp, ebp ; stack and base pointer can now be set further in memory
+
+    ; Enable the A20 line
+    ; See https://www.win.tue.nl/~aeb/linux/kbd/A20.html
+    ; https://wiki.osdev.org/A20_Line
+    ; Just an annoying accident of history makes this necessary
+    in al, 0x92
+    or al, 2
+    out 0x92, al
+
     jmp $
 
 ;***********************************************************************
