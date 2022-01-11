@@ -14,8 +14,7 @@ GID := $(shell id -g)
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-BIN_DIR=$(shell pwd)/bin
-export BIN_DIR
+export BIN_DIR = $(shell pwd)/bin
 
 ##################################
 # LOCAL BUILD, RUN, TEST TARGETS #
