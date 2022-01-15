@@ -31,7 +31,8 @@ start:
     mov eax, cr0          ; Bit 0 or cr0 toggles protected mode
     or eax, 0x1
     mov cr0, eax
-    jmp CODE_SEGMENT:load32 ; far jmp <Segment>:<Address within segment>
+    ;jmp CODE_SEGMENT:load32 ; far jmp <Segment>:<Address within segment>
+    jmp $
 
 ;**********************************************************************
 ; GDT - See http://www.brokenthorn.com/Resources/OSDev8.html for a good
@@ -64,26 +65,73 @@ gdt_descriptor:
     dw gdt_end - gdt_start - 1 ; Size
     dd gdt_start ; Offset
 
-[BITS 32] ; https://stackoverflow.com/questions/31989439/nasm-square-brackets-around-directives-like-bits-16 - explanation on square brackets here
-load32:
-    mov ax, DATA_SEGMENT
-    mov ds, ax
-    mov ss, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-    mov ebp, 0x00200000
-    mov esp, ebp ; stack and base pointer can now be set further in memory
+[BITS 32]
+; https://wiki.osdev.org/ATA_read/write_sectors
+load32: ; No longer in realmode so we have to write a driver to load the kernel into memory
+    mov eax, 1 ; sector to load from, 0 is the boot sector
+    mov ecx, 100 ; how many sectors to load, 100 sectors
+    mov edi, 0x0100000 ; the starting address to load to, 1MB
+    call ata_lba_read
+    jmp CODE_SEG:0x0100000
 
-    ; Enable the A20 line
-    ; See https://www.win.tue.nl/~aeb/linux/kbd/A20.html
-    ; https://wiki.osdev.org/A20_Line
-    ; Just an annoying accident of history makes this necessary
-    in al, 0x92
-    or al, 2
-    out 0x92, al
+ata_lba_read:
+    mov ebx, eax ; Back up the LBA
+    ; Send the highest 8 bits of the lba to hard disk controller
+    shr eax, 24
+    or eax, 0xE0 ; Select the master drive
+    mov dx, 0x1F6 ; Write the 8 bits to this port
+    out dx, al
+    ; Finished sending the highest 8 bits of the lba
 
-    jmp $
+    ; Send the total sectors to read
+    mov eax, ecx
+    mov dx, 0x1F2
+    out dx, al
+    ; Finished sending the total sectors to read
+
+    ; Send more bits of the lba
+    mov eax, ebx ; backup the lba
+    mov dx, 0x1F3
+    out dx, al
+    ; Finished sending more bits of the lba
+
+    ; Send more bits of the lba
+    mov dx, 0x1F4
+    mov eax, ebx ; backup the lba
+    shr eax, 8
+    out dx, al
+    ; Finished sending more bits of the lba
+
+    ; Send upper 16 bits of the lba
+    mov dx, 0x1F5
+    mov eax, ebx ; backup the lba
+    shr eax, 16
+    out dx, al
+    ; Finished sending upper 16 bits of the lba
+
+    ; Will be explained better in C/C++ later on
+    mov dx 0x1F7
+    mov al, 0x20
+    out dx, al 
+
+; Read all sectors into memory
+.next_sector:
+    push ecx
+
+; Checking if we need to re-read
+.try_again
+    mov dx, 0x1F7
+    in al, dx
+    test al, 8 ; is bit 8 set ?
+    jz .try_again
+    ; Read 256 words at a time i.e. 512 byts i.e 1 sector
+    mov ecx, 256
+    mov dx, 0x1F0
+    rep insw # read a word from 0x1F0 port in dx and store in edi which is 0x0100000 (kernel)
+    pop ecx
+    loop .next_sector
+    ; End of reading sectors into memory
+    ret
 
 ;***********************************************************************
 ; BOOTLOADER SIGNATURE
