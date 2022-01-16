@@ -10,7 +10,6 @@ TAG := $(shell git describe --tags --always --dirty)
 
 UID := $(shell id -u)
 GID := $(shell id -g)
-
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
@@ -28,7 +27,7 @@ bindir:
 
 .PHONY: builddir
 builddir:
-	@mkdir -p $(BUILDDIR)
+	@mkdir -p $(BUILD_DIR)
 
 .PHONY: version
 version:
@@ -75,18 +74,19 @@ docker-build:
 		-e 's|{VERSION}|$(TAG)|g'		\
 		-e 's|{USERID}|$(UID)|g'		\
 		-e 's|{GROUPID}|$(GID)|g'		\
-		Dockerfile | docker build -t $(IMAGE):$(TAG) -f- .					
+		Dockerfile | docker build -t $(IMAGE) -f- .					
+		#Dockerfile | docker build -t $(IMAGE):$(TAG) -f- .					
 
 # Example: make docker-run CMD="-c 'date > datefile'"
 .PHONY: docker-run
-docker-run: docker-build
+docker-run:
 	@echo "\n${BLUE}Launching a shell in the docker container environment...${NC}\n"
 		@docker run	\
 			-ti	 \
 			--rm \
 			-v $$PWD:/home/devuser/N00bOS \
 			--user $(UID):$(GID) \
-			$(IMAGE):$(TAG)	\
+			$(IMAGE)	\
 			${CMD}
 
 # Example: make docker-push VERSION=0.0.2

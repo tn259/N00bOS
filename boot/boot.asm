@@ -31,8 +31,7 @@ start:
     mov eax, cr0          ; Bit 0 or cr0 toggles protected mode
     or eax, 0x1
     mov cr0, eax
-    ;jmp CODE_SEGMENT:load32 ; far jmp <Segment>:<Address within segment>
-    jmp $
+    jmp CODE_SEGMENT:load32 ; far jmp <Segment>:<Address within segment>
 
 ;**********************************************************************
 ; GDT - See http://www.brokenthorn.com/Resources/OSDev8.html for a good
@@ -72,7 +71,7 @@ load32: ; No longer in realmode so we have to write a driver to load the kernel 
     mov ecx, 100 ; how many sectors to load, 100 sectors
     mov edi, 0x0100000 ; the starting address to load to, 1MB
     call ata_lba_read
-    jmp CODE_SEG:0x0100000
+    jmp CODE_SEGMENT:0x0100000
 
 ata_lba_read:
     mov ebx, eax ; Back up the LBA
@@ -110,7 +109,7 @@ ata_lba_read:
     ; Finished sending upper 16 bits of the lba
 
     ; Will be explained better in C/C++ later on
-    mov dx 0x1F7
+    mov dx, 0x1F7
     mov al, 0x20
     out dx, al 
 
@@ -119,7 +118,7 @@ ata_lba_read:
     push ecx
 
 ; Checking if we need to re-read
-.try_again
+.try_again:
     mov dx, 0x1F7
     in al, dx
     test al, 8 ; is bit 8 set ?
@@ -127,7 +126,7 @@ ata_lba_read:
     ; Read 256 words at a time i.e. 512 byts i.e 1 sector
     mov ecx, 256
     mov dx, 0x1F0
-    rep insw # read a word from 0x1F0 port in dx and store in edi which is 0x0100000 (kernel)
+    rep insw ; read a word from 0x1F0 port in dx and store in edi which is 0x0100000 (kernel)
     pop ecx
     loop .next_sector
     ; End of reading sectors into memory

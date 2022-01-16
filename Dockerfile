@@ -56,4 +56,4 @@ RUN /bin/bash install_cross_compiler.sh
 ENTRYPOINT ["/bin/bash"]
 
 LABEL name={NAME}
-LABEL version={VERSION}
+#LABEL version={VERSION}

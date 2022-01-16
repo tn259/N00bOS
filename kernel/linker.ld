@@ -6,9 +6,9 @@ SECTIONS /* sections or segments */
 {
     /* the ',' character is the location counter */
     . = 1M; /* kernel or sections will be loaded at 1M into memory */
-    .text :a /* code */
+    .text : /* code */
     {
-        *(.text) /* *(.x) means include all input files under the .text section
+        *(.text) /* (.x) means include all input files under the .text section */
     }
 
     .rodata : /* read only global/static data */
