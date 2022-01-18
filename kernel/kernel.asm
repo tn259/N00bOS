@@ -23,3 +23,7 @@ _start:
 
     jmp $
 
+; We have to pad for alignment with the C compiler as _start will be shared with the C code
+; If we do not do this there may be a mismatch between addesses and their instructions
+; so we could end up at instructions we did not intend to run
+times 512-($ - $$) db 0 ; for up to 512 bytes pad the rest with 0

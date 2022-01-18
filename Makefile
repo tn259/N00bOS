@@ -53,7 +53,7 @@ clean:
 	@rm -rf $(BUILD_DIR) $(BIN_DIR)
 
 .PHONY: all
-all: kernel boot
+all: boot kernel
 	@rm -rf $(BIN_DIR)/os.bin
 	dd if=$(BIN_DIR)/boot.bin >> $(BIN_DIR)/os.bin
 	dd if=$(BIN_DIR)/kernel.bin >> $(BIN_DIR)/os.bin
