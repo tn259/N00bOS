@@ -6,6 +6,9 @@
 MODULE := noobos
 
 # This version-strategy uses git tags to set the version string
+# Currently only used to version the docker image based on the git history
+# This is slightly broken in that the image is not tied to all of the source
+# of the repo, only what is necessary to build/run/test the project from source.
 TAG := $(shell git describe --tags --always --dirty)
 
 UID := $(shell id -u)
@@ -74,8 +77,7 @@ docker-build:
 		-e 's|{VERSION}|$(TAG)|g'		\
 		-e 's|{USERID}|$(UID)|g'		\
 		-e 's|{GROUPID}|$(GID)|g'		\
-		Dockerfile | docker build -t $(IMAGE) -f- .					
-		#Dockerfile | docker build -t $(IMAGE):$(TAG) -f- .					
+		Dockerfile | docker build -t $(IMAGE):$(TAG) -f- .	
 
 # Example: make docker-run CMD="-c 'date > datefile'"
 .PHONY: docker-run
