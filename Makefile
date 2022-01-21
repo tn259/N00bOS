@@ -16,9 +16,38 @@ GID := $(shell id -g)
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+
 export ROOT_DIR = $(shell pwd)
+
+export DEFAULT_HOST = $(shell $(ROOT_DIR)/default_host.sh)
+export HOST ?= $(DEFAULT_HOST)
+export HOST_ARCH = $(shell $(ROOT_DIR)/target_triplet_to_arch.sh $(HOST))
 export BIN_DIR = $(ROOT_DIR)/bin
 export BUILD_DIR = $(ROOT_DIR)/build
+export ARCH_DIR = arch/$(HOST_ARCH)
+
+#export CFLAGS = -g \ 
+#				-ffreestanding \
+				-falign-jumps \
+				-falign-functions \
+				-falign-labels \
+				-falign-loops \
+				-fstrength-reduce \
+				-fomit-frame-pointer \
+				-finline-functions \
+				-Wno-unused-function \
+				-fno-builtin \
+				-Werror \
+				-Wno-unused-label \
+				-Wno-unused-parameter \
+				-nostdlib \
+				-nostartfiles \
+				-nodefaultlibs \
+				-Wall \
+				-O0 \
+				-Iinc
+#export CPPFLAGS = 
+
 
 ##################################
 # LOCAL BUILD, RUN, TEST TARGETS #
@@ -26,11 +55,13 @@ export BUILD_DIR = $(ROOT_DIR)/build
 
 .PHONY: bindir
 bindir:
-	@mkdir -p $(BIN_DIR)
+	mkdir -p $(BIN_DIR)
+	mkdir -p $(BIN_DIR)/$(ARCH_DIR)
 
 .PHONY: builddir
 builddir:
-	@mkdir -p $(BUILD_DIR)
+	mkdir -p $(BUILD_DIR)
+	mkdir -p $(BUILD_DIR)/$(ARCH_DIR)
 
 .PHONY: version
 version:
@@ -44,20 +75,16 @@ boot: bindir
 kernel: builddir
 	$(MAKE) -C $(ROOT_DIR)/kernel
 
-.PHONY: run-x86
-run-x86: boot
-	qemu-system-x86_64 -nographic -hda $(BIN_DIR)/boot.bin # "Ctrl-A X" to exit from nographical
-
 .PHONY: clean
 clean:
 	@rm -rf $(BUILD_DIR) $(BIN_DIR)
 
 .PHONY: all
 all: boot kernel
-	@rm -rf $(BIN_DIR)/os.bin
-	dd if=$(BIN_DIR)/boot.bin >> $(BIN_DIR)/os.bin
-	dd if=$(BIN_DIR)/kernel.bin >> $(BIN_DIR)/os.bin
-	dd if=/dev/zero bs=512 count=100 >> $(BIN_DIR)/os.bin # pad up to the rest of the 100 sectors with nulls
+	rm -rf $(BIN_DIR)/$(ARCH_DIR)/os.bin
+	dd if=$(BIN_DIR)/$(ARCH_DIR)/boot.bin >> $(BIN_DIR)/$(ARCH_DIR)/os.bin
+	dd if=$(BIN_DIR)/$(ARCH_DIR)/kernel.bin >> $(BIN_DIR)/$(ARCH_DIR)/os.bin
+	dd if=/dev/zero bs=512 count=100 >> $(BIN_DIR)/$(ARCH_DIR)/os.bin # pad up to the rest of the 100 sectors with nulls
 
 #################################
 # DOCKER RELATED ################

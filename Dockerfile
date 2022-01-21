@@ -44,6 +44,8 @@ USER devuser
 
 ENV HOME="/home/devuser"
 ENV PREFIX="$HOME/opt/cross"
+# this is just the default target for now
+# but could be changed later to arm or something else
 ENV TARGET="i686-elf"
 ENV PATH="$PREFIX/bin:$PATH"
 

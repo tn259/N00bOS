@@ -28,35 +28,44 @@ mkdir -p $SCRIPT_DIR/src
 tar -zxvf binutils-$BINUTILS_VERSION.tar.gz -C $SCRIPT_DIR/src
 tar -zxvf gcc-$GCC_VERSION.tar.gz -C $SCRIPT_DIR/src
 
-#############################################
-# INSTALL BINUTILS
-#############################################
-cd $SCRIPT_DIR/src
-mkdir -p build-binutils
-cd build-binutils
-../binutils-$BINUTILS_VERSION/configure \
-    --target=$TARGET \
-    --prefix=$PREFIX \
-    --with-sysroot \
-    --disable-nls \
-    --disable-werror
-$make_command
-$make_command install
-cd ..
+install() {
+    for arch in "i686-elf"
+    do
+        TARGET=$arch
+        #############################################
+        # INSTALL BINUTILS
+        #############################################
+        cd $SCRIPT_DIR/src
+        mkdir -p build-binutils
+        mkdir -p build-binutils/$TARGET
+        cd build-binutils/$TARGET
+        ../../binutils-$BINUTILS_VERSION/configure \
+            --target=$TARGET \
+            --prefix=$PREFIX \
+            --with-sysroot \
+            --disable-nls \
+            --disable-werror
+        $make_command
+        $make_command install
 
-#############################################
-# INSTALL GCC
-#############################################
-cd $SCRIPT_DIR/src
-mkdir -p build-gcc
-cd build-gcc
-../gcc-$GCC_VERSION/configure \
-    --target=$TARGET \
-    --prefix="$PREFIX" \
-    --disable-nls \
-    --enable-languages=c,c++ \
-    --without-headers
-$make_command all-gcc
-$make_command all-target-libgcc
-$make_command install-gcc
-$make_command install-target-libgcc
+        #############################################
+        # INSTALL GCC
+        #############################################
+        cd $SCRIPT_DIR/src
+        mkdir -p build-gcc
+        mkdir -p build-gcc/$TARGET
+        cd build-gcc/$TARGET
+        ../../gcc-$GCC_VERSION/configure \
+            --target=$TARGET \
+            --prefix="$PREFIX" \
+            --disable-nls \
+            --enable-languages=c,c++ \
+            --without-headers
+        $make_command all-gcc
+        $make_command all-target-libgcc
+        $make_command install-gcc
+        $make_command install-target-libgcc
+    done
+}
+
+install
