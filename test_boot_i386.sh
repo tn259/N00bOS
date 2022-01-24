@@ -14,7 +14,7 @@ add-symbol-file ./build/arch/i386/kernelfull.o 0x100000
 break _start
 target remote localhost:12345
 c
-x/10i $pc
+x/15i $pc
 EOF
 
 trap 'kill $(jobs -p)' EXIT # kill all background processes on shell exit

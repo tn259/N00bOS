@@ -26,8 +26,12 @@ export BIN_DIR = $(ROOT_DIR)/bin
 export BUILD_DIR = $(ROOT_DIR)/build
 export ARCH_DIR = arch/$(HOST_ARCH)
 
-#export CFLAGS = -g \ 
-#				-ffreestanding \
+export AR := $(shell which $(HOST)-ar)
+export CC := $(shell which $(HOST)-gcc)
+export CXX := $(shell which $(HOST)-g++)
+
+export CFLAGS = -g \
+				-ffreestanding \
 				-falign-jumps \
 				-falign-functions \
 				-falign-labels \
@@ -44,9 +48,13 @@ export ARCH_DIR = arch/$(HOST_ARCH)
 				-nostartfiles \
 				-nodefaultlibs \
 				-Wall \
-				-O0 \
-				-Iinc
-#export CPPFLAGS = 
+				-O0
+
+export CXXFLAGS = -g \
+				-std=c++20 \
+				-fno-rtti \
+				-fno-exceptions \
+				-fno-use-cxa-atexit
 
 
 ##################################
