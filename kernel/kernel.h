@@ -1,6 +1,5 @@
 #pragma once
 
-extern "C"
-{
+extern "C" {
 void kernel_main();
 }
