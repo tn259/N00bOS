@@ -1,5 +1,6 @@
 [BITS 32] ; https://stackoverflow.com/questions/31989439/nasm-square-brackets-around-directives-like-bits-16 - explanation on square brackets here
 global _start ; exports the _start symbol so can be used by the linker
+global div_zero ; exports the _start symbol so can be used by the linker
 extern kernel_main
 CODE_SEGMENT equ 0x08
 DATA_SEGMENT equ 0x10
@@ -25,6 +26,15 @@ _start:
     call kernel_main
 
     jmp $
+
+div_zero:
+    push ebp
+    mov ebp, esp
+    int 0
+    leave
+    ret
+    ;mov eax, 0
+    ;div eax
 
 ; We have to pad for alignment with the C compiler as _start will be shared with the C code
 ; If we do not do this there may be a mismatch between addesses and their instructions
