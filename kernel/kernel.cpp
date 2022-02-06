@@ -1,6 +1,7 @@
-#include "tty.h"
-#include "arch/i386/idt.h"
 #include "kernel.h"
+
+#include "arch/i386/idt.h"
+#include "tty.h"
 
 extern "C" void div_zero();
 
@@ -10,4 +11,4 @@ void kernel_main() {
     terminal_write("Welcome to N00bOS!\n");
     idt_init();
     div_zero();
-} 
+}

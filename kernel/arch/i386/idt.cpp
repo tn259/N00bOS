@@ -1,8 +1,8 @@
 #include "idt.h"
 
-#include "tty.h" // just for printing
-
 #include <stddef.h>
+
+#include "tty.h" // just for printing
 
 /**
  * https://wiki.osdev.org/Interrupt_Descriptor_Table
@@ -20,7 +20,7 @@ void* memset(void* ptr, int c, size_t size) {
     }
     return ptr;
 }
-}
+} // namespace
 
 extern "C" {
 void idt_load(idtr_descriptor* ptr);
@@ -31,18 +31,18 @@ void idt_zero() {
 }
 
 void idt_set(int interrupt_number, void* address) {
-    idt_descriptor* desc = &idt_descs[interrupt_number];
-    desc->offset_1 = reinterpret_cast<uint32_t>(address) & 0x0000FFFF;
-    desc->selector = KERNEL_CODE_SELECTOR;
-    desc->zero = 0;
+    idt_descriptor* desc  = &idt_descs[interrupt_number];
+    desc->offset_1        = reinterpret_cast<uint32_t>(address) & 0x0000FFFF;
+    desc->selector        = KERNEL_CODE_SELECTOR;
+    desc->zero            = 0;
     desc->type_attributes = 0xEE; // P = 1 ; DPL = 3; S = 0 ; Type = 32 bit interrupt gate; 0b11101110
-    desc->offset_2 = reinterpret_cast<uint32_t>(address) >> 16;
+    desc->offset_2        = reinterpret_cast<uint32_t>(address) >> 16;
 }
 
 void idt_init() {
     memset(idt_descs, 0, sizeof(idt_descs));
-    idtr_desc.limit = sizeof(idt_descs)-1;
-    idtr_desc.base = reinterpret_cast<uint32_t>(&idt_descs[0]);
+    idtr_desc.limit = sizeof(idt_descs) - 1;
+    idtr_desc.base  = reinterpret_cast<uint32_t>(&idt_descs[0]);
 
     idt_set(0, reinterpret_cast<void*>(idt_zero)); // example divide by zero
 

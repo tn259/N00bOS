@@ -1,14 +1,15 @@
-#include "vga.h"
 #include "tty.h"
 
 #include <stddef.h>
 #include <stdint.h>
 
+#include "vga.h"
+
 namespace {
 
-static const constexpr size_t VGA_WIDTH = 80;
+static const constexpr size_t VGA_WIDTH  = 80;
 static const constexpr size_t VGA_HEIGHT = 25;
-static const uint16_t* VGA_MEMORY = reinterpret_cast<uint16_t*>(0xB8000);
+static const uint16_t* VGA_MEMORY        = reinterpret_cast<uint16_t*>(0xB8000);
 
 static size_t terminal_row;
 static size_t terminal_column;
@@ -16,14 +17,14 @@ static uint8_t terminal_colour;
 static uint16_t* terminal_buffer;
 
 void terminal_write_char_at(char character, size_t row, size_t column) {
-    const size_t index = row * VGA_WIDTH + column;
+    const size_t index     = row * VGA_WIDTH + column;
     terminal_buffer[index] = vga_entry(character, static_cast<vga_colour>(terminal_colour));
 }
 
-}
+} // namespace
 
 void terminal_initialise() {
-    terminal_row = 0;
+    terminal_row    = 0;
     terminal_column = 0;
     terminal_colour = vga_entry_colour(VGA_COLOUR_LIGHT_GREY, VGA_COLOUR_BLACK);
     terminal_buffer = const_cast<uint16_t*>(VGA_MEMORY);
