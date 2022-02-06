@@ -118,12 +118,12 @@ docker-build:
 .PHONY: docker-run
 docker-run:
 	@echo "\n${BLUE}Launching a shell in the docker container environment...${NC}\n"
-		@docker run	\
+		docker run	\
 			-ti	 \
 			--rm \
 			-v $$PWD:/home/devuser/N00bOS \
 			--user $(UID):$(GID) \
-			$(IMAGE)	\
+			$(IMAGE):$(TAG)	\
 			${CMD}
 
 # Example: make docker-push VERSION=0.0.2

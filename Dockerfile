@@ -19,8 +19,11 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
   libmpfr-dev \
   texinfo \
   libisl-dev \
+  # clang related
+  clang-format \
+  clang-tidy \
+  bear \
   # the rest
-  cmake \
   make \
   gdb \
   valgrind \
