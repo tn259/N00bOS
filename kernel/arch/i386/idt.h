@@ -1,7 +1,8 @@
-#pragma once
+#pragma once // NOLINT(llvm-header-guard)
 
-#include <stddef.h>
-#include <stdint.h>
+// Not setting up C++ freestanding std headers
+#include <stddef.h> // NOLINT(hicpp-deprecated-headers,modernize-deprecated-headers)
+#include <stdint.h> // NOLINT(hicpp-deprecated-headers,modernize-deprecated-headers)
 
 /**
  * https://wiki.osdev.org/Interrupt_Descriptor_Table

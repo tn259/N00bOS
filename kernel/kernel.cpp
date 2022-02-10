@@ -7,7 +7,7 @@ extern "C" void div_zero();
 
 void kernel_main() {
     terminal_initialise();
-    terminal_set_colour(10);
+    terminal_set_colour(10); // NOLINT(readability-magic-numbers,cppcoreguidelines-avoid-magic-numbers)
     terminal_write("Welcome to N00bOS!\n");
     idt_init();
     div_zero();
