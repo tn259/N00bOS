@@ -27,7 +27,8 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
   make \
   gdb \
   valgrind \
-  python3
+  python3 \
+  doxygen
 
 RUN addgroup --gid {GROUPID} devuser
 
