@@ -99,7 +99,7 @@ all: boot kernel
 #################################
 
 # Where to push the docker image.
-REGISTRY ?= docker.pkg.github.com/tn259/noobos
+REGISTRY ?= ghcr.io/tn259
 IMAGE := $(REGISTRY)/$(MODULE)
 
 .PHONY: docker-build
@@ -123,15 +123,21 @@ docker-run:
 			--rm \
 			-v $$PWD:/home/devuser/N00bOS \
 			--user $(UID):$(GID) \
-			$(IMAGE):$(TAG)	\
+			$(IMAGE) \
 			${CMD}
 
-# Example: make docker-push VERSION=0.0.2
 .PHONY: docker-push
 docker-push: docker-build
 	@echo "\n${BLUE}Pushing image to GitHub Docker Registry...${NC}\n"
-	@docker push $(IMAGE):$(VERSION)
+	docker push $(IMAGE):$(TAG)
+
+
+# Example: make docker-pull VERSION=<Hash>-dirty
+.PHONY: docker-pull
+docker-pull:
+	@echo "\n${BLUE}PUlling image from Github Docker Registry...${NC}\n"
+	docker pull $(IMAGE):$(VERSION)
 
 .PHONY: docker-clean
 docker-clean:
-	@docker system prune -f --filter "label=name=$(MODULE)"
+	docker rmi -f $(shell docker images -q $(IMAGE))

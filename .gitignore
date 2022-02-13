@@ -33,3 +33,4 @@
 
 # Others
 *.bin
+container_registry_login.sh
