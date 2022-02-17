@@ -107,12 +107,7 @@ docker-build:
 	@echo "\n${BLUE}Building docker image with labels:\n"
 	@echo "name: $(MODULE)"
 	@echo "version: $(TAG)${NC}\n"
-	@sed								\
-		-e 's|{NAME}|$(MODULE)|g'		\
-		-e 's|{VERSION}|$(TAG)|g'		\
-		-e 's|{USERID}|$(UID)|g'		\
-		-e 's|{GROUPID}|$(GID)|g'		\
-		Dockerfile | docker build -t $(IMAGE):$(TAG) -f- .	
+	docker build -t $(IMAGE):$(TAG) -f- .	
 
 # Example: make docker-run CMD="-c 'date > datefile'"
 .PHONY: docker-run
@@ -122,8 +117,8 @@ docker-run:
 			-ti	 \
 			--rm \
 			-v $$PWD:/home/devuser/N00bOS \
-			--user $(UID):$(GID) \
-			$(IMAGE) \
+			--user devuser \
+			$(IMAGE):$(TAG) \
 			${CMD}
 
 .PHONY: docker-push

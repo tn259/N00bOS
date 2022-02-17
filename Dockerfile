@@ -30,10 +30,10 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
   python3 \
   doxygen
 
-RUN addgroup --gid {GROUPID} devuser
+RUN addgroup --gid 1000 devuser
 
 # Add 'devuser' with password 'devuser' with home directory and add to sudo group
-RUN useradd --home-dir /home/devuser --create-home --shell /bin/bash --uid {USERID} --gid {GROUPID} devuser \
+RUN useradd --home-dir /home/devuser --create-home --shell /bin/bash --uid 1000 --gid 1000 devuser \
   && echo "devuser:devuser" | chpasswd \
   && adduser devuser sudo
 
