@@ -107,7 +107,7 @@ docker-build:
 	@echo "\n${BLUE}Building docker image with labels:\n"
 	@echo "name: $(MODULE)"
 	@echo "version: $(TAG)${NC}\n"
-	docker build -t $(IMAGE):$(TAG) -f- .	
+	docker build -t $(IMAGE) -f- . < Dockerfile	
 
 # Example: make docker-run CMD="-c 'date > datefile'"
 .PHONY: docker-run
@@ -118,7 +118,7 @@ docker-run:
 			--rm \
 			-v $$PWD:/home/devuser/N00bOS \
 			--user devuser \
-			$(IMAGE):$(TAG) \
+			$(IMAGE) \
 			${CMD}
 
 .PHONY: docker-push

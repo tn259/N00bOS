@@ -24,7 +24,7 @@ jobs:
       options: -u devuser
     steps:
         uses: actions/checkout@v2
-      - name: build and test
+      - name: build
         run: make clean
         run: make all
       - name: clang-tidy check
@@ -35,3 +35,5 @@ jobs:
           run: echo "clang-tidy failed"
           run: cat clang_tidy.out
           run: exit 1
+      - name: test
+        run: ./test_boot_i386.sh
