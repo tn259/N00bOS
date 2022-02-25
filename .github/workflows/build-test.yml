@@ -3,37 +3,37 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Build and test noobos
-on:
-  workflow_run:
-    workflows: ["Create and publish Docker image"]
-      types:
-        - completed
-
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   IMAGE_TAG: ${{ github.ref_name }}
 
+name: Build and test noobos
+on:
+  workflow_run:
+    workflows: ["Create and publish Docker image"]
+    types: [completed]
 jobs:
   build-and-test:
+    name: "Build and test"
     runs-on: ubuntu-latest
-    contianer: 
+    contianer:
       image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-      volumes: ${{ env.GITHUB_WORKSPACE }}:/home/devuser/noobos 
+      volumes: ${{ env.GITHUB_WORKSPACE }}:/home/devuser/noobos
       options: -u devuser
     steps:
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
       - name: build
-        run: make clean
-        run: make all
-      - name: clang-tidy check
-        run: make clean
-        run: bear make all
-        run: find . -name '*.cpp' -o -name '*.h' -o -name '*.hpp' | xargs clang-tidy -p . > clang_tidy.out
-        if: [[ !  -s clang_tidy.out ]] # not empty
-          run: echo "clang-tidy failed"
-          run: cat clang_tidy.out
-          run: exit 1
+        run: |
+          make clean
+          make all
+      - name: clang-tidy-check
+        run: |
+          make clean && bear make all
+          find . -name '*.cpp' -o -name '*.h' -o -name '*.hpp' | xargs clang-tidy -p . > clang_tidy.out
+          if [[ ! -s clang_tidy.out ]] # not empty
+            echo "clang-tidy failed"
+            cat clang_tidy.out
+            exit 1
       - name: test
         run: ./test_boot_i386.sh

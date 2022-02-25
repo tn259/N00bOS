@@ -35,5 +35,5 @@
 *.bin
 container_registry_login.sh
 compile_commands.json
-doxygen/*
-.vscode/
+doxydoc/*
+.vscode/*
