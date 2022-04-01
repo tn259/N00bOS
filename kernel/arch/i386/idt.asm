@@ -1,6 +1,17 @@
 section .asm
 
+extern int21h_handler ; import from C
+extern no_interrupt_handler ; import from C
+
+global enable_interrupts
 global idt_load
+global int21h ; export to C
+global no_interrupt
+
+enable_interrupts:
+    sti
+    ret
+
 idt_load:
     push ebp        ; save base pointer of callee frame
     mov ebp, esp    ; basepointer of this frame is now the stack frame
@@ -10,3 +21,19 @@ idt_load:
 
     pop ebp         ; retrieve old callee basepointer
     ret
+
+int21h: ; Example keyboard IRQ
+    cli
+    pushad ; push/pop all general purpose registers
+    call int21h_handler
+    popad
+    sti
+    iret
+
+no_interrupt: ; Example keyboard IRQ
+    cli
+    pushad ; push/pop all general purpose registers
+    call no_interrupt_handler
+    popad
+    sti
+    iret

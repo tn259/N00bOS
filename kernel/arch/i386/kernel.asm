@@ -4,6 +4,8 @@ global div_zero ; exports the _start symbol so can be used by the linker
 extern kernel_main
 CODE_SEGMENT equ 0x08
 DATA_SEGMENT equ 0x10
+MASTER_PIC_COMMAND_PORT equ 0x20
+MASTER_PIC_DATA_PORT equ 0x21
 
 _start:
     mov ax, DATA_SEGMENT
@@ -14,6 +16,17 @@ _start:
     mov gs, ax
     mov ebp, 0x00200000
     mov esp, ebp ; stack and base pointer can now be set further in memory
+
+    ; Remap master PIC
+    ;mov al, 00010001b ; init mode
+    ;out MASTER_PIC_COMMAND_PORT, al ; Tell master pic
+
+    ;mov al, 0x20 ; Interrupt 0x20 is where master ISR should start
+    ;out MASTER_PIC_DATA_PORT, al
+
+    ;mov al, 00000001b ; Put the PIC in x86 mode
+    ;out MASTER_PIC_DATA_PORT, al
+    ; End of remap master PIC
 
     ; Enable the A20 line
     ; See https://www.win.tue.nl/~aeb/linux/kbd/A20.html

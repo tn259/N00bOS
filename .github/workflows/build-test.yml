@@ -31,9 +31,10 @@ jobs:
         run: |
           make clean && bear make all
           find . -name '*.cpp' -o -name '*.h' -o -name '*.hpp' | xargs clang-tidy -p . > clang_tidy.out
-          if [[ ! -s clang_tidy.out ]] # not empty
+          if [[ ! -s clang_tidy.out ]]; then # not empty
             echo "clang-tidy failed"
             cat clang_tidy.out
             exit 1
+          fi
       - name: test
         run: ./test_boot_i386.sh
