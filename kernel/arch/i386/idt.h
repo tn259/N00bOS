@@ -26,4 +26,7 @@ struct idtr_descriptor {
 } __attribute__((packed));
 
 void idt_init();
-extern "C" void enable_interrupts();
+extern "C" {
+void enable_interrupts();
+void disable_interrupts();
+}

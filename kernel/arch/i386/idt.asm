@@ -4,12 +4,17 @@ extern int21h_handler ; import from C
 extern no_interrupt_handler ; import from C
 
 global enable_interrupts
+global disable_interrupts
 global idt_load
 global int21h ; export to C
 global no_interrupt
 
 enable_interrupts:
     sti
+    ret
+
+disable_interrupts:
+    cli
     ret
 
 idt_load:

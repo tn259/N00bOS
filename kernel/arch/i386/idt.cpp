@@ -55,11 +55,11 @@ void idt_init() {
     idtr_desc.limit = sizeof(idt_descs) - 1;
     idtr_desc.base  = reinterpret_cast<uint32_t>(&idt_descs[0]);
 
-    /*for (size_t i = 0; i < NOOBOS_TOTAL_INTERRUPTS; ++i) {
+    for (size_t i = 0; i < NOOBOS_TOTAL_INTERRUPTS; ++i) {
         idt_set(i, reinterpret_cast<void*>(no_interrupt));
-    }*/
-    //idt_set(0, reinterpret_cast<void*>(idt_zero)); // example divide by zero
-    //idt_set(0x21, reinterpret_cast<void*>(int21h)); // keyboard interrupt
+    }
+    idt_set(0, reinterpret_cast<void*>(idt_zero)); // example divide by zero
+    idt_set(0x21, reinterpret_cast<void*>(int21h)); // keyboard interrupt
 
     // Load interrupt descriptor table
     idt_load(&idtr_desc);

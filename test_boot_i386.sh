@@ -28,6 +28,12 @@ si
 x/1i $pc
 si
 x/1i $pc
+si
+x/1i $pc
+si
+x/1i $pc
+si
+x/1i $pc
 EOF
 
 trap 'kill $(jobs -p)' EXIT # kill all background processes on shell exit

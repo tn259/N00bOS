@@ -18,14 +18,14 @@ _start:
     mov esp, ebp ; stack and base pointer can now be set further in memory
 
     ; Remap master PIC
-    ;mov al, 00010001b ; init mode
-    ;out MASTER_PIC_COMMAND_PORT, al ; Tell master pic
+    mov al, 00010001b ; init mode
+    out MASTER_PIC_COMMAND_PORT, al ; Tell master pic
 
-    ;mov al, 0x20 ; Interrupt 0x20 is where master ISR should start
-    ;out MASTER_PIC_DATA_PORT, al
+    mov al, 0x20 ; Interrupt 0x20 is where master ISR should start
+    out MASTER_PIC_DATA_PORT, al
 
-    ;mov al, 00000001b ; Put the PIC in x86 mode
-    ;out MASTER_PIC_DATA_PORT, al
+    mov al, 00000001b ; Put the PIC in x86 mode
+    out MASTER_PIC_DATA_PORT, al
     ; End of remap master PIC
 
     ; Enable the A20 line
