@@ -13,6 +13,14 @@ idt_descriptor idt_descs[NOOBOS_TOTAL_INTERRUPTS];
 idtr_descriptor idtr_desc;
 
 namespace {
+// TODO(tn259): There are equivalents of these in the .asm.
+//              Need to figure out how to share the ASM constants -> C/C++ to avoid duplication
+const constexpr uint8_t MASTER_PIC_CONTROL_BASE_IO_PORT    = 0x20; // NOLINT(clang-diagnostic-unused-const-variable)
+const constexpr uint8_t MASTER_PIC_CONTROL_COMMAND_IO_PORT = MASTER_PIC_CONTROL_BASE_IO_PORT;
+const constexpr uint8_t MASTER_PIC_CONTROL_DATA_IO_PORT    = MASTER_PIC_CONTROL_BASE_IO_PORT + 1; // NOLINT(clang-diagnostic-unused-const-variable)
+
+const constexpr uint8_t PIC_END_OF_INTERRUPT_COMMAND = 0x20;
+
 // TODO(tn259) put this into a "libc"
 void* memset(void* ptr, char c, size_t size) {
     char* char_ptr = static_cast<char*>(ptr);
@@ -31,10 +39,10 @@ void no_interrupt();
 
 extern "C" void int21h_handler() {
     terminal_write("Keyboard pressed\n");
-    outb(0x20, 0x20); // we are done handling the interrupt
+    outb(MASTER_PIC_CONTROL_COMMAND_IO_PORT, PIC_END_OF_INTERRUPT_COMMAND); // we are done handling the interrupt
 }
-extern "C" void no_interrupt_handler() { // for all interrupts not explicitly handled
-    outb(0x20, 0x20);                    // we are done handling the interrupt (End of Interrupt)
+extern "C" void no_interrupt_handler() {                                    // for all interrupts not explicitly handled
+    outb(MASTER_PIC_CONTROL_COMMAND_IO_PORT, PIC_END_OF_INTERRUPT_COMMAND); // we are done handling the interrupt (End of Interrupt)
 }
 void idt_zero() {
     terminal_write("DIVIDE BY 0 ERROR\n");
@@ -59,7 +67,7 @@ void idt_init() {
         idt_set(i, reinterpret_cast<void*>(no_interrupt));
     }
     idt_set(0, reinterpret_cast<void*>(idt_zero));  // example divide by zero
-    idt_set(0x21, reinterpret_cast<void*>(int21h)); // keyboard interrupt
+    idt_set(0x21, reinterpret_cast<void*>(int21h)); // keyboard interrupt NOLINT (cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 
     // Load interrupt descriptor table
     idt_load(&idtr_desc);
