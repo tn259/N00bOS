@@ -17,7 +17,7 @@ jobs:
   build-and-test:
     name: "Build and test"
     runs-on: ubuntu-latest
-    contianer:
+    container:
       image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
       volumes: ${{ env.GITHUB_WORKSPACE }}:/home/devuser/noobos
       options: -u devuser
