@@ -3,10 +3,6 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-  IMAGE_TAG: ${{ github.ref_name }}
 
 name: Build and test noobos
 on:
@@ -18,7 +14,7 @@ jobs:
     name: "Build and test"
     runs-on: ubuntu-latest
     container:
-      image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+      image: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
       volumes: ${{ env.GITHUB_WORKSPACE }}:/home/devuser/noobos
       options: -u devuser
     steps:
