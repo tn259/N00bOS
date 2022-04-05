@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-      volumes: ${{ env.GITHUB_WORKSPACE }}:/home/devuser/noobos
+      volumes: .:/home/devuser/noobos
       options: -u devuser
     steps:
       - uses: actions/checkout@v2
