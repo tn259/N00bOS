@@ -1,9 +1,11 @@
 #include "idt.h"
 
-#include <stddef.h>
-
 #include "io.h"
 #include "tty.h" // just for printing
+
+#include "memory.h"
+
+#include <stddef.h>
 
 /**
  * https://wiki.osdev.org/Interrupt_Descriptor_Table
@@ -21,14 +23,6 @@ const constexpr uint8_t MASTER_PIC_CONTROL_DATA_IO_PORT    = MASTER_PIC_CONTROL_
 
 const constexpr uint8_t PIC_END_OF_INTERRUPT_COMMAND = 0x20;
 
-// TODO(tn259) put this into a "libc"
-void* memset(void* ptr, char c, size_t size) {
-    char* char_ptr = static_cast<char*>(ptr);
-    for (size_t idx = 0; idx < size; ++idx) {
-        char_ptr[idx] = c;
-    }
-    return ptr;
-}
 } // namespace
 
 extern "C" {
