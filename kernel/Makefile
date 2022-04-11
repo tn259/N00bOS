@@ -4,6 +4,7 @@ include ./memory/heap/make.config
 
 #CPP_FILES=$(shell find . -name "*.cpp")
 FILES = $(BUILD_DIR)/$(ARCH_DIR)/kernel.asm.o $(BUILD_DIR)/$(ARCH_DIR)/kernel.cpp.o $(KERNEL_ARCH_OBJS) $(MEMORY_ARCH_OBJS) $(HEAP_ARCH_OBJS)
+#FILES = $(BUILD_DIR)/$(ARCH_DIR)/kernel.asm.o $(BUILD_DIR)/$(ARCH_DIR)/kernel.cpp.o $(KERNEL_ARCH_OBJS)
 INCLUDES = -I./ -I./$(ARCH_DIR)/ -I./memory/ -I./memory/heap/
 
 $(BIN_DIR)/$(ARCH_DIR)/kernel.bin: $(FILES)
@@ -19,5 +20,9 @@ $(BUILD_DIR)/$(ARCH_DIR)/kernel.cpp.o: ./kernel.cpp
 	$(CXX) $(INCLUDES) $(CFLAGS) $(CXXFLAGS) -MMD -c $< -o $@
 
 # all other cpp
-$(BUILD_DIR)/$(ARCH_DIR)/%.cpp.o: ./$(ARCH_DIR)/%.cpp ./memory/%.cpp ./memory/heap/%.cpp
+$(BUILD_DIR)/$(ARCH_DIR)/%.cpp.o: ./$(ARCH_DIR)/%.cpp #./memory/%.cpp ./memory/heap/%.cpp
+	$(CXX) $(INCLUDES) $(CFLAGS) $(CXXFLAGS) -MMD -c $< -o $@
+$(BUILD_DIR)/$(ARCH_DIR)/%.cpp.o: ./memory/%.cpp #./memory/heap/%.cpp
+	$(CXX) $(INCLUDES) $(CFLAGS) $(CXXFLAGS) -MMD -c $< -o $@
+$(BUILD_DIR)/$(ARCH_DIR)/%.cpp.o: ./memory/heap/%.cpp
 	$(CXX) $(INCLUDES) $(CFLAGS) $(CXXFLAGS) -MMD -c $< -o $@
