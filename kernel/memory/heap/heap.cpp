@@ -1,16 +1,14 @@
 #include "heap.h"
-#include "config.h"
+#include "heap_utilities.h"
 
 #include "memory.h"
 
+#include "config.h"
+
+
 namespace {
 
-bool validate_alignment(void* ptr) {
-    return (reinterpret_cast<size_t>(ptr) % HEAP_BLOCK_SIZE);
-}
-
 int validate_heap_table(void* start_ptr, void* end_ptr, heap_table* table) {
-    //size_t table_size = static_cast<size_t>(end_ptr - start_ptr);
     size_t table_size = reinterpret_cast<size_t>(end_ptr) - reinterpret_cast<size_t>(start_ptr);
     size_t table_total_blocks = table_size / HEAP_BLOCK_SIZE;
 
