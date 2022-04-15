@@ -3,7 +3,7 @@
 #include "config.h"
 
 bool validate_alignment(void* addr) {
-    return (reinterpret_cast<size_t>(addr) % HEAP_BLOCK_SIZE);
+    return (reinterpret_cast<size_t>(addr) % HEAP_BLOCK_SIZE) == 0;
 }
 
 size_t align_to_upper(size_t size) {
@@ -20,4 +20,8 @@ void* block_idx_2_block_address(heap* heap, size_t block_idx) {
 size_t block_address_2_block_idx(heap* heap, void* addr) {
     auto data_offset = reinterpret_cast<size_t>(addr) - reinterpret_cast<size_t>(heap->start_address);
     return data_offset / HEAP_BLOCK_SIZE;
+}
+
+uint8_t get_entry_type(HEAP_BLOCK_TABLE_ENTRY entry) {
+    return (entry & 0x0f);
 }

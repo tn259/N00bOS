@@ -1,6 +1,8 @@
 #include "kheap.h"
 #include "heap.h"
 #include "heap_strategy_factory.h"
+
+#include "status.h"
 #include "config.h"
 
 namespace {
@@ -25,7 +27,7 @@ void kheap_init() {
     // Create
     auto create_result = strategy.create(&kernel_heap, reinterpret_cast<void*>(HEAP_ADDRESS), end_ptr, &kernel_heap_table);
     if (create_result < 0) {
-        // TODO(tn259) error
+        // TODO(tn259) print error
     }
 }
 
@@ -35,4 +37,13 @@ void* kmalloc(size_t size) {
 
 void kfree(void* ptr) {
     strategy.free(&kernel_heap, ptr);
+}
+
+bool kheap_assert_all_free() {
+    for (size_t idx = 0; idx < kernel_heap_table.total_entries; ++idx) {
+        if (kernel_heap_table.entries[idx] != HEAP_BLOCK_TABLE_ENTRY_FREE) {
+            return false;
+        }
+    }
+    return true;
 }

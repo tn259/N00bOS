@@ -4,6 +4,7 @@
 
 #include "memory.h"
 
+#include "status.h"
 #include "config.h"
 
 #include <stddef.h>
@@ -14,28 +15,26 @@ namespace {
 
 int find_first_fit_start_block(heap* heap, size_t block_size) {
     // starting from the start address find the first contiguous block big enough
-    auto aligned_block_size = align_to_upper(block_size);
     for (size_t idx = 0; idx < heap->table->total_entries; ) {
         size_t contiguous_block_count = 0;
         size_t idx_range = idx;
         for ( ; idx_range < heap->table->total_entries; ++idx_range) {
-            if (heap->table->entries[idx_range] & HEAP_BLOCK_TABLE_ENTRY_FREE) {
+            if (get_entry_type(heap->table->entries[idx_range]) == HEAP_BLOCK_TABLE_ENTRY_FREE) {
                 ++contiguous_block_count;
             }
             else {
                 break;
             }
         }
-        if (contiguous_block_count * HEAP_BLOCK_SIZE >= aligned_block_size) {
+        if (contiguous_block_count * HEAP_BLOCK_SIZE >= block_size) {
             return idx;
         }
         idx = idx_range+1;
     }
-    // ERROR
-    return -1;
+    return -ENOMEM;
 }
 
-}
+} // anonymous namespace
 
 void set_strategy(heap_strategy* strategy) {
     strategy->malloc = &heap_malloc;
