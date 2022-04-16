@@ -8,7 +8,7 @@ on: [push, pull_request]
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: tn259/noobos
 
 jobs:
   build-and-push-image:
