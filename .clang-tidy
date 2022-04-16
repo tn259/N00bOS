@@ -1,1 +1,1 @@
-Checks:         '*,-*-deprecated-headers,-llvm-header-guard,-*-avoid-c-arrays,-*-pointer-arithmetic,-*-reinterpret-cast,-*-trailing-return-type,-hicpp-signed-bitwise'
+Checks:         '*,-*-deprecated-headers,-llvm-header-guard,-*-avoid-c-arrays,-*-pointer-arithmetic,-*-reinterpret-cast,-*-trailing-return-type,-hicpp-signed-bitwise,-*-implicit-bool-conversion,-*-simplify-boolean-expr'

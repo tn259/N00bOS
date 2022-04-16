@@ -16,10 +16,17 @@ void kernel_main() {
     kheap_init();
 
     // test heap
-    if (kheap_assert_all_free()) terminal_write("Pre kmalloc - ALL FREE\n");
-    char* c = (char*)kmalloc(sizeof(char[5000])); // should allocate two blocks
-    if (!kheap_assert_all_free()) terminal_write("Post kmalloc - c is allocated\n");
+    if (kheap_assert_all_free()) {
+        terminal_write("Pre kmalloc - ALL FREE\n");
+    }
+    // we should allocate two blocks here
+    char* c = static_cast<char*>(kmalloc(sizeof(char[5000]))); // NOLINT(readability-magic-numbers,cppcoreguidelines-avoid-magic-numbers)
+    if (!kheap_assert_all_free()) {
+        terminal_write("Post kmalloc - c is allocated\n");
+    }
     *c = 'C';
     kfree(c);
-    if (kheap_assert_all_free()) terminal_write("Post kfree - NOTHING ALLOCATED\n");
+    if (kheap_assert_all_free()) {
+        terminal_write("Post kfree - NOTHING ALLOCATED\n");
+    }
 }

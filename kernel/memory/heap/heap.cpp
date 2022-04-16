@@ -1,16 +1,14 @@
 #include "heap.h"
-#include "heap_utilities.h"
 
-#include "memory.h"
-
-#include "status.h"
 #include "config.h"
-
+#include "heap_utilities.h"
+#include "memory.h"
+#include "status.h"
 
 namespace {
 
 bool validate_heap_table(void* start_ptr, void* end_ptr, heap_table* table) {
-    size_t table_size = reinterpret_cast<size_t>(end_ptr) - reinterpret_cast<size_t>(start_ptr);
+    size_t table_size         = reinterpret_cast<size_t>(end_ptr) - reinterpret_cast<size_t>(start_ptr);
     size_t table_total_blocks = table_size / HEAP_BLOCK_SIZE;
 
     if (table_total_blocks != table->total_entries) {
@@ -29,9 +27,9 @@ int default_heap_create(heap* heap, void* start_ptr, void* end_ptr, heap_table* 
     }
 
     // Init heap memory and start
-    memset(heap, 0, sizeof(heap));
+    memset(heap, 0, sizeof(heap)); // NOLINT(bugprone-sizeof-expression)
     heap->start_address = start_ptr;
-    heap->table = table;
+    heap->table         = table;
 
     // Validate table
     if (!validate_heap_table(start_ptr, end_ptr, table)) {

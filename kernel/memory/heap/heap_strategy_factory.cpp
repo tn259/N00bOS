@@ -1,11 +1,10 @@
-#include "config.h"
-
 #include "heap_strategy_factory.h"
+
+#include "config.h"
+#include "find_first_fit_strategy.h"
 #include "heap.h"
 
-#include "find_first_fit_strategy.h"
-
-void heap_strategy_factory::make_strategy(heap_algorithm algorithm, heap_strategy* strategy_ptr) {
+void heap_strategy_factory::make_strategy(heap_algorithm algorithm, heap_strategy* strategy_ptr) { // NOLINT(readability-convert-member-functions-to-static)
     switch (algorithm) {
         case heap_algorithm::find_first:
             find_first_fit::set_strategy(strategy_ptr);

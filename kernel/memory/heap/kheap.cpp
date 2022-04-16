@@ -1,20 +1,20 @@
 #include "kheap.h"
+
+#include "config.h"
 #include "heap.h"
 #include "heap_strategy_factory.h"
-
 #include "status.h"
-#include "config.h"
 
 namespace {
 heap kernel_heap;
 heap_table kernel_heap_table;
 heap_strategy strategy;
-}
+} // namespace
 
 void kheap_init() {
     // Set heap_table
-    auto total_table_entries = HEAP_SIZE_BYTES / HEAP_BLOCK_SIZE;
-    kernel_heap_table.entries = reinterpret_cast<HEAP_BLOCK_TABLE_ENTRY*>(HEAP_TABLE_ADDRESS);
+    auto total_table_entries        = HEAP_SIZE_BYTES / HEAP_BLOCK_SIZE;
+    kernel_heap_table.entries       = reinterpret_cast<HEAP_BLOCK_TABLE_ENTRY*>(HEAP_TABLE_ADDRESS);
     kernel_heap_table.total_entries = total_table_entries;
 
     // Set end ptr of heap

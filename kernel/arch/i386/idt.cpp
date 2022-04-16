@@ -1,11 +1,10 @@
 #include "idt.h"
 
-#include "io.h"
-#include "tty.h" // just for printing
-
-#include "memory.h"
-
 #include <stddef.h>
+
+#include "io.h"
+#include "memory.h"
+#include "tty.h" // just for printing
 
 /**
  * https://wiki.osdev.org/Interrupt_Descriptor_Table

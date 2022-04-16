@@ -1,12 +1,12 @@
 #pragma once
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 static const constexpr uint8_t HEAP_BLOCK_TABLE_ENTRY_TAKEN = 0x01;
-static const constexpr uint8_t HEAP_BLOCK_TABLE_ENTRY_FREE = 0x00;
-static const constexpr uint8_t HEAP_BLOCK_HAS_NEXT = 0b10000000;
-static const constexpr uint8_t HEAP_BLOCK_IS_FIRST = 0b01000000;
+static const constexpr uint8_t HEAP_BLOCK_TABLE_ENTRY_FREE  = 0x00;
+static const constexpr uint8_t HEAP_BLOCK_HAS_NEXT          = 0b10000000;
+static const constexpr uint8_t HEAP_BLOCK_IS_FIRST          = 0b01000000;
 
 using HEAP_BLOCK_TABLE_ENTRY = unsigned char;
 
@@ -19,9 +19,9 @@ struct heap {
     void* start_address;
 };
 
-typedef int (*heap_create)(heap* heap_ptr, void* start_ptr, void* end_ptr, heap_table* table);
-typedef void* (*heap_malloc)(heap* heap_ptr, size_t block_size);
-typedef void (*heap_free)(heap* heap_ptr, void* block_ptr);
+using heap_create = int (*)(heap* heap_ptr, void* start_ptr, void* end_ptr, heap_table* table);
+using heap_malloc = void* (*)(heap* heap_ptr, size_t block_size);
+using heap_free   = void (*)(heap* heap_ptr, void* block_ptr);
 
 struct heap_strategy {
     heap_create create;
