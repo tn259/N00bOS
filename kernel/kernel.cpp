@@ -2,18 +2,30 @@
 
 #include "arch/i386/idt.h"
 #include "arch/i386/io.h"
+#include "arch/i386/paging/paging.h"
+
 #include "memory/heap/kheap.h"
 #include "tty.h"
 
 extern "C" void div_zero();
 
+namespace {
+    paging_chunk* kernel_paging_chunk;
+}
+
 void kernel_main() {
     terminal_initialise();
     terminal_set_colour(10); // NOLINT(readability-magic-numbers,cppcoreguidelines-avoid-magic-numbers)
     terminal_write("Welcome to N00bOS\n");
+
     idt_init();
-    enable_interrupts();
+
     kheap_init();
+
+    kernel_paging_chunk = paging_new(PAGING_IS_WRITABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL);
+    paging_switch(kernel_paging_chunk);
+    enable_paging();
+    enable_interrupts();
 
     // test heap
     if (kheap_assert_all_free()) {

@@ -5,6 +5,8 @@
 #include "heap_strategy_factory.h"
 #include "status.h"
 
+#include "memory.h"
+
 namespace {
 heap kernel_heap;
 heap_table kernel_heap_table;
@@ -33,6 +35,12 @@ void kheap_init() {
 
 void* kmalloc(size_t size) {
     return strategy.malloc(&kernel_heap, size);
+}
+
+void* kzalloc(size_t size) {
+    void* allocated = kmalloc(size);
+    memset(allocated, 0x00, size);
+    return allocated;
 }
 
 void kfree(void* ptr) {

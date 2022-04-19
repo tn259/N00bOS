@@ -30,7 +30,7 @@ export AR := $(shell which $(HOST)-ar)
 export CC := $(shell which $(HOST)-gcc)
 export CXX := $(shell which $(HOST)-g++)
 
-export CFLAGS = -g \
+export CFLAGS = -ggdb \
 				-ffreestanding \
 				-falign-jumps \
 				-falign-functions \
@@ -50,7 +50,7 @@ export CFLAGS = -g \
 				-Wall \
 				-O0
 
-export CXXFLAGS = -g \
+export CXXFLAGS = -ggdb \
 				-std=c++20 \
 				-fno-rtti \
 				-fno-exceptions \
