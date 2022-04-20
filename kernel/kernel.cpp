@@ -3,15 +3,14 @@
 #include "arch/i386/idt.h"
 #include "arch/i386/io.h"
 #include "arch/i386/paging/paging.h"
-
 #include "memory/heap/kheap.h"
 #include "tty.h"
 
 extern "C" void div_zero();
 
 namespace {
-    paging_chunk* kernel_paging_chunk;
-}
+paging_chunk* kernel_paging_chunk;
+} // anonymous namespace
 
 void kernel_main() {
     terminal_initialise();

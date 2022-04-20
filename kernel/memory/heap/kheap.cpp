@@ -3,9 +3,8 @@
 #include "config.h"
 #include "heap.h"
 #include "heap_strategy_factory.h"
-#include "status.h"
-
 #include "memory.h"
+#include "status.h"
 
 namespace {
 heap kernel_heap;
