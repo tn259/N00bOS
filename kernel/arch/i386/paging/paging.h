@@ -50,6 +50,8 @@
  * 
  */
 
+using PAGING_ENTRY = uint32_t;
+
 extern "C" {
 static const constexpr size_t PAGING_TOTAL_ENTRIES_PER_TABLE = 1024;
 static const constexpr size_t PAGING_PAGE_SIZE               = 4096; // 4KB pages
@@ -59,9 +61,9 @@ static const constexpr uint8_t PAGING_WRITE_THROUGH_CACHE = 0b00001000;
 static const constexpr uint8_t PAGING_ACCESS_FROM_ALL     = 0b00000100;
 static const constexpr uint8_t PAGING_IS_WRITABLE         = 0b00000010;
 static const constexpr uint8_t PAGING_IS_PRESENT          = 0b00000001;
-}
 
-using PAGING_ENTRY = uint32_t;
+static const constexpr PAGING_ENTRY PAGING_ADDRESS_MASK = 0xfffff000;
+}
 
 struct paging_chunk {
     PAGING_ENTRY* directory_entry;
@@ -95,4 +97,4 @@ void paging_switch(paging_chunk* chunk);
  * @param value - The page table entry contents
  * @return 0 on success 
  */
-int paging_set(PAGING_ENTRY* directory, void* virtual_address, PAGING_ENTRY value);
+int paging_set(const PAGING_ENTRY* directory, void* virtual_address, PAGING_ENTRY value);

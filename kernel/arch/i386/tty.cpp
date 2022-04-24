@@ -9,7 +9,7 @@ namespace {
 
 const constexpr size_t VGA_WIDTH          = 80;
 const constexpr size_t VGA_HEIGHT         = 25;
-const constexpr uint32_t VGA_MEMORY_START = 0xB8000;
+const constexpr uint32_t VGA_MEMORY_START = 0xB8000; // https://wiki.osdev.org/VGA_Hardware
 const uint16_t* VGA_MEMORY                = reinterpret_cast<uint16_t*>(VGA_MEMORY_START);
 
 size_t terminal_row;

@@ -70,17 +70,17 @@ void paging_switch(paging_chunk* chunk) {
     current_directory = chunk->directory_entry;
 }
 
-int paging_set(PAGING_ENTRY* directory, void* virtual_address, PAGING_ENTRY value) {
+int paging_set(const PAGING_ENTRY* directory, void* virtual_address, PAGING_ENTRY value) {
     PAGING_ENTRY directory_idx = 0;
     PAGING_ENTRY table_idx     = 0;
 
-    int result;
+    int result = 0;
     if ((result = paging_get_idxs(virtual_address, &directory_idx, &table_idx)) < 0) {
         return result;
     }
 
     PAGING_ENTRY table_entry = directory[directory_idx];
-    PAGING_ENTRY* table      = reinterpret_cast<PAGING_ENTRY*>(table_entry & 0xfffff000);
+    auto* table              = reinterpret_cast<PAGING_ENTRY*>(table_entry & PAGING_ADDRESS_MASK);
     table[table_idx]         = value;
     return 0;
 }

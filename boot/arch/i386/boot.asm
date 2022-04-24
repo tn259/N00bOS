@@ -4,6 +4,7 @@
 ; Interrupts reference
 ; http://www.ctyme.com/intr/int.htm
 
+; See https://wiki.osdev.org/Memory_Map_(x86)
 ORG 0x7c00 ; BIOS looks for something to run at this address
 BITS 16 ; Running in 16 bit Real mode
 
