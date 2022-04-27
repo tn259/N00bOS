@@ -28,8 +28,11 @@ void kernel_main() {
     //paging_set(kernel_paging_chunk->directory_entry, (void*)0x1000, (PAGING_ENTRY)ptr | PAGING_ACCESS_FROM_ALL | PAGING_IS_PRESENT | PAGING_IS_WRITABLE); // NOLINT
     enable_paging();
 
+    disk::search_and_initialize();
+    disk::disk* d = disk::get(0);
+
     char buf[512];
-    read_sector(0, 1, &buf[0]);
+    disk::read_block(d, 0, 1, &buf[0]);
 
     enable_interrupts();
 }

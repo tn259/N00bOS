@@ -1,7 +1,43 @@
 #include "ata.h"
 
+#include "status.h"
+#include "config.h"
+
+#include "memory/memory.h"
 #include "arch/i386/io.h"
 
+namespace {
+
+disk::disk primary_disk;
+
+}
+
+namespace disk {
+
+void search_and_initialize() {
+    memset(&primary_disk, 0, sizeof(primary_disk));
+    primary_disk.type = REAL_PHYSICAL;
+    primary_disk.sector_size = DISK_BLOCK_SIZE;
+}
+
+disk* get(int index) {
+    if (index != 0) {
+        return nullptr;
+    }
+    return &primary_disk;
+}
+
+int read_block(disk* disk, int lba, int total, void* buf) {
+    if (disk != &primary_disk) {
+        return -EINVAL;
+    }
+    return ata::read_sector(lba, total, buf);
+}
+
+namespace ata {
+
+// https://wiki.osdev.org/ATA_PIO_Mode
+// https://wiki.osdev.org/ATA_Command_Matrix
 int read_sector(int lba, int total, void* buf) {
     // upper 8bits to the HD controller
     outb(0x1F6, (lba >> 24) | 0xE0); // E0 is to select the master drive
@@ -15,7 +51,7 @@ int read_sector(int lba, int total, void* buf) {
     unsigned short* ptr = (unsigned short*)(buf);
     for (int sector_idx = 0; sector_idx < total; ++sector_idx) {
         // wait for buffer to be ready
-        // TODO(tn259) use interrupt for this
+        // TODO(tn259) use interrupt for this once multitasking implemented
         char c = 0;
         c = insb(0x1F7);
         while (!(c & 0x08)) {
@@ -29,3 +65,6 @@ int read_sector(int lba, int total, void* buf) {
     }
     return 0;
 }
+
+} // namespace ata
+} // namespace disk
