@@ -15,7 +15,8 @@ insb:
     mov edx, [ebp+8] ; first argument into edx reg
     in al, dx
 
-    leave
+    mov esp, ebp
+    pop ebp
     ret ; eax is always the return value
 insw:
     push ebp
@@ -25,7 +26,8 @@ insw:
     mov edx, [ebp+8] ; first argument into edx reg
     in ax, dx
 
-    leave
+    mov esp, ebp
+    pop ebp
     ret ; eax is always the return value
 
 ; https://c9x.me/x86/html/file_module_x86_id_222.html

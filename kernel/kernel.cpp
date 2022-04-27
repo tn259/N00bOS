@@ -3,6 +3,7 @@
 #include "arch/i386/idt.h"
 #include "arch/i386/io.h"
 #include "arch/i386/paging/paging.h"
+#include "drivers/ata/ata.h"
 #include "memory/heap/kheap.h"
 #include "tty.h"
 
@@ -23,15 +24,12 @@ void kernel_main() {
 
     kernel_paging_chunk = paging_new(PAGING_IS_WRITABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL);
     paging_switch(kernel_paging_chunk);
-    auto* ptr = (char*)kzalloc(4096);                                                                                                                     // NOLINT
-    paging_set(kernel_paging_chunk->directory_entry, (void*)0x1000, (PAGING_ENTRY)ptr | PAGING_ACCESS_FROM_ALL | PAGING_IS_PRESENT | PAGING_IS_WRITABLE); // NOLINT
+    //auto* ptr = (char*)kzalloc(4096);                                                                                                                     // NOLINT
+    //paging_set(kernel_paging_chunk->directory_entry, (void*)0x1000, (PAGING_ENTRY)ptr | PAGING_ACCESS_FROM_ALL | PAGING_IS_PRESENT | PAGING_IS_WRITABLE); // NOLINT
     enable_paging();
 
-    char* ptr2 = (char*)0x1000; // NOLINT
-    ptr2[0]    = 'A';
-    ptr2[1]    = 'B';
-    terminal_write(ptr2);
-    terminal_write(ptr);
+    char buf[512];
+    read_sector(0, 1, &buf[0]);
 
     enable_interrupts();
 }

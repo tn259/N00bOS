@@ -39,6 +39,7 @@ export CFLAGS = -ggdb \
 				-fstrength-reduce \
 				-fomit-frame-pointer \
 				-finline-functions \
+				-fvar-tracking \
 				-Wno-unused-function \
 				-fno-builtin \
 				-Werror \
