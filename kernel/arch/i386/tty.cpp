@@ -1,9 +1,11 @@
 #include "tty.h"
+#include "vga.h"
+
+#include "libc/string.h"
 
 #include <stddef.h>
 #include <stdint.h>
 
-#include "vga.h"
 
 namespace {
 
@@ -59,7 +61,8 @@ void terminal_write_char(char character) {
 }
 
 void terminal_write(const char* string) {
-    for (size_t idx = 0; string[idx] != '\0'; ++idx) { // no strlen for now
+    auto len = strlen(string);
+    for (size_t idx = 0; idx < len; ++idx) {
         terminal_write_char(string[idx]);
     }
 }

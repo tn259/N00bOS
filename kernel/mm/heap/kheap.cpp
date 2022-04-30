@@ -3,7 +3,7 @@
 #include "config.h"
 #include "heap.h"
 #include "heap_strategy_factory.h"
-#include "memory.h"
+#include "libc/string.h"
 #include "status.h"
 
 namespace {

@@ -4,7 +4,7 @@
 #include "arch/i386/io.h"
 #include "arch/i386/paging/paging.h"
 #include "drivers/ata/ata.h"
-#include "memory/heap/kheap.h"
+#include "mm/heap/kheap.h"
 #include "tty.h"
 
 extern "C" void div_zero();

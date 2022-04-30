@@ -3,7 +3,7 @@
 #include "status.h"
 #include "config.h"
 
-#include "memory/memory.h"
+#include "libc/string.h"
 #include "arch/i386/io.h"
 
 namespace {

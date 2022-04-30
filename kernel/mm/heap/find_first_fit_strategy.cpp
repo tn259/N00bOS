@@ -5,7 +5,7 @@
 #include "config.h"
 #include "heap.h"
 #include "heap_utilities.h"
-#include "memory.h"
+#include "libc/string.h"
 #include "status.h"
 
 namespace find_first_fit {

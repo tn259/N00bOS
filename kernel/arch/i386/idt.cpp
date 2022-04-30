@@ -3,7 +3,7 @@
 #include <stddef.h>
 
 #include "io.h"
-#include "memory.h"
+#include "libc/string.h"
 #include "tty.h" // just for printing
 
 /**

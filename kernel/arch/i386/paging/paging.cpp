@@ -1,6 +1,6 @@
 #include "paging.h"
 
-#include "memory/heap/kheap.h"
+#include "mm/heap/kheap.h"
 #include "status.h"
 
 namespace {
