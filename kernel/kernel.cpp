@@ -5,6 +5,7 @@
 #include "arch/i386/paging/paging.h"
 #include "drivers/ata/ata.h"
 #include "mm/heap/kheap.h"
+#include "fs/path_parser.h" 
 #include "tty.h"
 
 extern "C" void div_zero();
@@ -35,4 +36,7 @@ void kernel_main() {
     disk::read_block(d, 0, 1, &buf[0]);
 
     enable_interrupts();
+
+    auto* path_root = parse("0:/a/b/c/d.exe");
+    if (path_root != nullptr) {}
 }
