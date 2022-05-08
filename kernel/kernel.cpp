@@ -4,6 +4,7 @@
 #include "arch/i386/io.h"
 #include "arch/i386/paging/paging.h"
 #include "drivers/ata/ata.h"
+#include "disk/disk_streamer.h"
 #include "mm/heap/kheap.h"
 #include "fs/path_parser.h" 
 #include "tty.h"
@@ -30,13 +31,12 @@ void kernel_main() {
     enable_paging();
 
     disk::search_and_initialize();
-    disk::disk* d = disk::get(0);
 
-    char buf[512];
-    disk::read_block(d, 0, 1, &buf[0]);
+    disk_streamer::disk_stream* ds = disk_streamer::new_stream(0);
+
+    char buf[514];
+    disk_streamer::seek(ds, 0x1ff); // 500
+    disk_streamer::read(ds, buf, 514); // 550
 
     enable_interrupts();
-
-    auto* path_root = parse("0:/a/b/c/d.exe");
-    if (path_root != nullptr) {}
 }
