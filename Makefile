@@ -93,7 +93,11 @@ all: boot kernel
 	rm -rf $(BIN_DIR)/$(ARCH_DIR)/os.bin
 	dd if=$(BIN_DIR)/$(ARCH_DIR)/boot.bin >> $(BIN_DIR)/$(ARCH_DIR)/os.bin
 	dd if=$(BIN_DIR)/$(ARCH_DIR)/kernel.bin >> $(BIN_DIR)/$(ARCH_DIR)/os.bin
-	dd if=/dev/zero bs=512 count=100 >> $(BIN_DIR)/$(ARCH_DIR)/os.bin # pad up to the rest of the 100 sectors with nulls
+	dd if=/dev/zero bs=1M count=16 >> $(BIN_DIR)/$(ARCH_DIR)/os.bin # pad up to reset with 16MB of nulls
+	sudo mkdir -p /mnt/d
+	sudo mount -t vfat $(BIN_DIR)/$(ARCH_DIR)/os.bin /mnt/d
+	sudo cp ./my_file.txt /mnt/d
+	sudo umount /mnt/d
 
 #################################
 # DOCKER RELATED ################
@@ -115,6 +119,7 @@ docker-build:
 docker-run:
 	@echo "\n${BLUE}Launching a shell in the docker container environment...${NC}\n"
 		docker run	\
+            --privileged \
 			-ti	 \
 			--rm \
 			-v $$PWD:/home/devuser/N00bOS \

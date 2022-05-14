@@ -12,9 +12,35 @@ BITS 16 ; Running in 16 bit Real mode
 CODE_SEGMENT equ gdt_code - gdt_start
 DATA_SEGMENT equ gdt_data - gdt_start
 
-jmp 0:start ; starts at 0x7c0 (absolute address set with ORG), offset is at the start label to start executing
+; See BPB https://wiki.osdev.org/FAT
+jmp short start
+nop
+; FAT 16 Header (BIOS Parameter Pack)
+OEM_identifier       db 'N00bOS  '
+bytes_per_sector     dw 0x200
+sectors_per_cluster  db 0x80
+reserved_sectors     dw 200
+fat_copies           db 0x02 ; for FAT1 and FAT2
+root_dir_entries     dw 0x40
+num_sectors          dw 0x00 ; 0 means more than 65535, actual value in Large Sector Count entry
+media_type           db 0xF8 ; https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system#BPB20_OFS_0Ah
+sectors_per_fat      dw 0x100
+sectors_per_track    dw 0x20
+number_of_heads      dw 0x40
+hidden_sectors       dd 0x00
+sectors_big          dd 0x773594
+; Extended BPB (DOS4.0)
+drive_number         db 0x80
+win_nt_bit           db 0x00
+signature            db 0x29
+volume_id            dd 0xD105
+volume_id_string     db 'N00bOS BOOT'
+system_id_string     db 'FAT16   '
 
 start:
+    jmp 0:start2 ; starts at 0x7c0 (absolute address set with ORG), offset is at the start label to start executing
+
+start2:
 
 .clear_segments:
     ; first explicitly set the segment registers as there is no guarantee as to what they will be set to
