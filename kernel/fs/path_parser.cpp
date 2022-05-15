@@ -6,6 +6,8 @@
 #include "libc/string.h"
 #include "libc/stdlib.h"
 
+namespace fs {
+
 namespace {
 
 /**
@@ -32,10 +34,10 @@ bool validate_path(const char* path) {
  * @return int - -1 if invalid
  */
 int get_drive(const char* path) {
-    auto* drive_str = static_cast<char*>(kzalloc(2));
+    auto* drive_str = static_cast<char*>(mm::heap::kzalloc(2));
     drive_str[0] = path[0];
     auto drive = atoi(drive_str);
-    kfree(drive_str);
+    mm::heap::kfree(drive_str);
     return drive;
 }
 
@@ -46,7 +48,7 @@ int get_drive(const char* path) {
  * @return path_root* 
  */
 path_root* create_root(int drive_number) {
-    auto* root = static_cast<path_root*>(kzalloc(sizeof(path_root)));
+    auto* root = static_cast<path_root*>(mm::heap::kzalloc(sizeof(path_root)));
     root->drive_number = drive_number;
     root->path = nullptr;
     return root;
@@ -71,7 +73,7 @@ char* get_path_part_str(const char** path) {
         return nullptr;
     }
     // allocate string and set
-    auto* path_part_str = static_cast<char*>(kzalloc(idx+1)); // +1 for the null terminator
+    auto* path_part_str = static_cast<char*>(mm::heap::kzalloc(idx+1)); // +1 for the null terminator
     idx = 0;
     while (*path_ptr != '\0' && *path_ptr != '/') {
         path_part_str[idx] = *path_ptr;
@@ -96,7 +98,7 @@ char* get_path_part_str(const char** path) {
 path_part* parse_path_part(path_part* previous_part, const char** path) {
     auto* path_part_str = get_path_part_str(path);
     // allocate new path part
-    auto* current_part = static_cast<path_part*>(kzalloc(sizeof(path_part)));
+    auto* current_part = static_cast<path_part*>(mm::heap::kzalloc(sizeof(path_part)));
     current_part->part_name = path_part_str;
     current_part->next = nullptr;
     // set prev next to current
@@ -106,7 +108,7 @@ path_part* parse_path_part(path_part* previous_part, const char** path) {
     return current_part;
 }
 
-}
+}  // namespace anonymous
 
 path_root* parse(const char* path) {
     if (strlen(path) > MAX_PATH_LENGTH) {
@@ -135,9 +137,11 @@ void free(path_root* root) {
     auto* part = root->path;
     while (part != nullptr) {
         auto* next = part->next;
-        kfree(part->part_name);
-        kfree(part);
+        mm::heap::kfree(part->part_name);
+        mm::heap::kfree(part);
         part = next;
     }
-    kfree(root);
+    mm::heap::kfree(root);
 }
+
+}  // namespace fs

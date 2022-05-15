@@ -5,6 +5,9 @@
 #include "libc/string.h"
 #include "status.h"
 
+namespace mm {
+namespace heap {
+
 namespace {
 
 bool validate_heap_table(void* start_ptr, void* end_ptr, heap_table* table) {
@@ -42,3 +45,6 @@ int default_heap_create(heap* heap, void* start_ptr, void* end_ptr, heap_table* 
 
     return 0;
 }
+
+} // namespace heap
+} // namespace mm

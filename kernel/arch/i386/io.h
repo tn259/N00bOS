@@ -2,9 +2,7 @@
 
 #include <stdint.h>
 
-
 extern "C" {
-
 unsigned char insb(uint16_t port);
 unsigned short insw(uint16_t port);
 

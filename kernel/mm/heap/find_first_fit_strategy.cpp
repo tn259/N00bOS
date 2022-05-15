@@ -8,6 +8,8 @@
 #include "libc/string.h"
 #include "status.h"
 
+namespace mm {
+namespace heap {
 namespace find_first_fit {
 
 namespace {
@@ -78,3 +80,5 @@ void heap_free(heap* heap, void* addr) {
 }
 
 } // namespace find_first_fit
+} // namespace heap
+} // namespace mm

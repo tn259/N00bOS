@@ -1,13 +1,15 @@
 #pragma once
 
-#include "drivers/ata/ata.h"
+namespace disk {
 
-namespace disk_streamer {
+struct disk;
+
+namespace streamer {
 
 struct disk_stream
 {
     int pos;
-    disk::disk* disk;
+    disk* d;
 };
 
 /**
@@ -28,7 +30,7 @@ disk_stream* new_stream(int disk_id);
 int seek(disk_stream* stream, int pos);
 
 /**
- * @brief Read total bytes into out from disk stream
+ * @brief Read total bytes into out from disk stream starting from its seek pos
  * 
  * @param stream 
  * @param out - output buffer to read into
@@ -44,4 +46,5 @@ int read(disk_stream* stream, void* out, int total);
  */
 void close(disk_stream* stream);
 
-} // namespace disk_streamer
+} // namespace streamer
+} // namespace disk

@@ -6,34 +6,6 @@
 #include "libc/string.h"
 #include "arch/i386/io.h"
 
-namespace {
-
-disk::disk primary_disk;
-
-}
-
-namespace disk {
-
-void search_and_initialize() {
-    memset(&primary_disk, 0, sizeof(primary_disk));
-    primary_disk.type = REAL_PHYSICAL;
-    primary_disk.sector_size = DISK_BLOCK_SIZE;
-}
-
-disk* get(int index) {
-    if (index != 0) {
-        return nullptr;
-    }
-    return &primary_disk;
-}
-
-int read_block(disk* disk, int lba, int total, void* buf) {
-    if (disk != &primary_disk) {
-        return -EINVAL;
-    }
-    return ata::read_sector(lba, total, buf);
-}
-
 namespace ata {
 
 // https://wiki.osdev.org/ATA_PIO_Mode
@@ -67,4 +39,3 @@ int read_sector(int lba, int total, void* buf) {
 }
 
 } // namespace ata
-} // namespace disk

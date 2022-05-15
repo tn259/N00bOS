@@ -1,14 +1,18 @@
 #include "idt.h"
-
-#include <stddef.h>
-
 #include "io.h"
 #include "libc/string.h"
 #include "tty.h" // just for printing
 
+#include <stddef.h>
+
 /**
  * https://wiki.osdev.org/Interrupt_Descriptor_Table
  **/
+
+
+namespace arch {
+namespace i386 {
+namespace idt {
 
 idt_descriptor idt_descs[NOOBOS_TOTAL_INTERRUPTS];
 idtr_descriptor idtr_desc;
@@ -23,20 +27,32 @@ const constexpr uint8_t MASTER_PIC_CONTROL_DATA_IO_PORT    = MASTER_PIC_CONTROL_
 const constexpr uint8_t PIC_END_OF_INTERRUPT_COMMAND = 0x20;
 
 } // namespace
+} // namespace idt
+} // namespace i386
+} // namespace arch
 
 extern "C" {
-void idt_load(idtr_descriptor* ptr);
+
+using namespace arch::i386;
+
+void idt_load(idt::idtr_descriptor* ptr);
 void int21h();
 void no_interrupt();
+
+void int21h_handler() {
+    terminal_write("Keyboard pressed\n");
+    outb(idt::MASTER_PIC_CONTROL_COMMAND_IO_PORT, idt::PIC_END_OF_INTERRUPT_COMMAND); // we are done handling the interrupt
+}
+void no_interrupt_handler() {                                               // for all interrupts not explicitly handled
+    outb(idt::MASTER_PIC_CONTROL_COMMAND_IO_PORT, idt::PIC_END_OF_INTERRUPT_COMMAND); // we are done handling the interrupt (End of Interrupt)
 }
 
-extern "C" void int21h_handler() {
-    terminal_write("Keyboard pressed\n");
-    outb(MASTER_PIC_CONTROL_COMMAND_IO_PORT, PIC_END_OF_INTERRUPT_COMMAND); // we are done handling the interrupt
 }
-extern "C" void no_interrupt_handler() {                                    // for all interrupts not explicitly handled
-    outb(MASTER_PIC_CONTROL_COMMAND_IO_PORT, PIC_END_OF_INTERRUPT_COMMAND); // we are done handling the interrupt (End of Interrupt)
-}
+
+namespace arch {
+namespace i386 {
+namespace idt {
+
 void idt_zero() {
     terminal_write("DIVIDE BY 0 ERROR\n");
 }
@@ -65,3 +81,7 @@ void idt_init() {
     // Load interrupt descriptor table
     idt_load(&idtr_desc);
 }
+
+} // namespace idt
+} // namespace i386
+} // namespace arch

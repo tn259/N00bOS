@@ -49,10 +49,12 @@
  *                                  PTE 2
  * 
  */
+namespace arch {
+namespace i386 {
+namespace paging {
 
 using PAGING_ENTRY = uint32_t;
 
-extern "C" {
 static const constexpr size_t PAGING_TOTAL_ENTRIES_PER_TABLE = 1024;
 static const constexpr size_t PAGING_PAGE_SIZE               = 4096; // 4KB pages
 
@@ -63,16 +65,10 @@ static const constexpr uint8_t PAGING_IS_WRITABLE         = 0b00000010;
 static const constexpr uint8_t PAGING_IS_PRESENT          = 0b00000001;
 
 static const constexpr PAGING_ENTRY PAGING_ADDRESS_MASK = 0xfffff000;
-}
 
 struct paging_chunk {
     PAGING_ENTRY* directory_entry;
 };
-
-extern "C" { // ASM functions
-void enable_paging();
-void paging_load_directory(PAGING_ENTRY* directory);
-}
 
 /**
  * @brief Allocates a new 4GB memory space
@@ -98,3 +94,13 @@ void paging_switch(paging_chunk* chunk);
  * @return 0 on success 
  */
 int paging_set(const PAGING_ENTRY* directory, void* virtual_address, PAGING_ENTRY value);
+
+} // namespace paging
+} // namespace i386
+} // namespace arch
+
+extern "C" { // ASM functions
+using namespace arch::i386::paging;
+void enable_paging();
+void paging_load_directory(PAGING_ENTRY* directory);
+}

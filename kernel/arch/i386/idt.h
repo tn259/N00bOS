@@ -8,6 +8,10 @@
  * https://wiki.osdev.org/Interrupt_Descriptor_Table
  **/
 
+namespace arch {
+namespace i386 {
+namespace idt {
+
 static const constexpr uint16_t KERNEL_CODE_SELECTOR  = 0x08;
 static const constexpr uint16_t KERNEL_DATA_SELECTOR  = 0x10;
 static const constexpr size_t NOOBOS_TOTAL_INTERRUPTS = 512;
@@ -26,6 +30,11 @@ struct idtr_descriptor {
 } __attribute__((packed));
 
 void idt_init();
+
+}  // namespace idt
+}  // namespace i386
+}  // namespace arch
+
 extern "C" {
 void enable_interrupts();
 void disable_interrupts();

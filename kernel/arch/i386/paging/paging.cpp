@@ -3,6 +3,10 @@
 #include "mm/heap/kheap.h"
 #include "status.h"
 
+namespace arch {
+namespace i386 {
+namespace paging {
+
 namespace {
 PAGING_ENTRY* current_directory;
 
@@ -48,11 +52,11 @@ int paging_get_idxs(void* virtual_address, PAGING_ENTRY* directory_idx, PAGING_E
 } // anonymous namespace
 
 paging_chunk* paging_new(uint8_t flags) {
-    auto* directory = static_cast<PAGING_ENTRY*>(kzalloc(sizeof(PAGING_ENTRY) * PAGING_TOTAL_ENTRIES_PER_TABLE));
+    auto* directory = static_cast<PAGING_ENTRY*>(mm::heap::kzalloc(sizeof(PAGING_ENTRY) * PAGING_TOTAL_ENTRIES_PER_TABLE));
     // Point every directory entry to a page table
     size_t offset = 0; // start address at which the directory points to
     for (size_t dir_idx = 0; dir_idx < PAGING_TOTAL_ENTRIES_PER_TABLE; ++dir_idx) {
-        auto* table = static_cast<PAGING_ENTRY*>(kzalloc(sizeof(PAGING_ENTRY) * PAGING_TOTAL_ENTRIES_PER_TABLE));
+        auto* table = static_cast<PAGING_ENTRY*>(mm::heap::kzalloc(sizeof(PAGING_ENTRY) * PAGING_TOTAL_ENTRIES_PER_TABLE));
         for (size_t table_idx = 0; table_idx < PAGING_TOTAL_ENTRIES_PER_TABLE; ++table_idx) {
             table[table_idx] = (offset + (table_idx * PAGING_PAGE_SIZE)) | flags;
         }
@@ -60,7 +64,7 @@ paging_chunk* paging_new(uint8_t flags) {
         directory[dir_idx] = reinterpret_cast<PAGING_ENTRY>(table) | flags | PAGING_IS_WRITABLE;
     }
 
-    auto* chunk            = static_cast<paging_chunk*>(kzalloc(sizeof(paging_chunk)));
+    auto* chunk            = static_cast<paging_chunk*>(mm::heap::kzalloc(sizeof(paging_chunk)));
     chunk->directory_entry = directory;
     return chunk;
 }
@@ -84,3 +88,7 @@ int paging_set(const PAGING_ENTRY* directory, void* virtual_address, PAGING_ENTR
     table[table_idx]         = value;
     return 0;
 }
+
+} // namespace paging
+} // namespace i386
+} // namespace arch

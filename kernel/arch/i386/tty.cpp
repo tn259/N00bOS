@@ -6,6 +6,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+namespace arch {
+namespace i386 {
 
 namespace {
 
@@ -70,3 +72,6 @@ void terminal_write(const char* string) {
 void terminal_set_colour(uint8_t colour) {
     terminal_colour = colour;
 }
+
+} // namespace i386
+} // namespace arch

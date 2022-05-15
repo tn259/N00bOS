@@ -2,6 +2,9 @@
 
 #include <stdint.h> // NOLINT(hicpp-deprecated-headers,modernize-deprecated-headers)
 
+namespace arch {
+namespace i386 {
+
 enum vga_colour {
     VGA_COLOUR_BLACK         = 0,
     VGA_COLOUR_BLUE          = 1,
@@ -28,3 +31,6 @@ static inline uint8_t vga_entry_colour(enum vga_colour fg, enum vga_colour bg) {
 static inline uint16_t vga_entry(unsigned char character, enum vga_colour colour) { // NOLINT(modernize-use-trailing-return-type,clang-diagnostic-unused-function)
     return static_cast<uint16_t>(character) | static_cast<uint16_t>(colour << 8);   // NOLINT(hicpp-signed-bitwise,cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 }
+
+} // namespace i386
+} // namespace arch

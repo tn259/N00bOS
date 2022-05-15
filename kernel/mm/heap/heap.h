@@ -3,6 +3,30 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/**
+ * Simple bitmap heap model
+ * 
+ * heap ---> heap_table -------------------> entries
+ *   |           |                           | has_next? | is_first? |  |  |  |  |  | is_taken? |
+ *   |           |-------> total_entries     |
+ *   |
+ *   |-----> data
+ *           |
+ *           |
+ *           |
+ *           |
+ *            ...
+ * 
+ * Each heap_table entry accounts for a heap block in memory
+ * total_entries = total_heap_size / heap_block_size
+ * 
+ * Algorithms supported:
+ * - Find first fit
+ */
+
+namespace mm {
+namespace heap {
+
 static const constexpr uint8_t HEAP_BLOCK_TABLE_ENTRY_TAKEN = 0x01;
 static const constexpr uint8_t HEAP_BLOCK_TABLE_ENTRY_FREE  = 0x00;
 static const constexpr uint8_t HEAP_BLOCK_HAS_NEXT          = 0b10000000;
@@ -30,3 +54,6 @@ struct heap_strategy {
 };
 
 int default_heap_create(heap* heap_ptr, void* start_ptr, void* end_ptr, heap_table* table);
+
+}  // namespace heap
+}  // namespace mm
