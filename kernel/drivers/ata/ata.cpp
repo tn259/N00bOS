@@ -4,7 +4,7 @@
 #include "config.h"
 
 #include "libc/string.h"
-#include "arch/i386/io.h"
+#include "arch/i386/io/io.h"
 
 namespace ata {
 

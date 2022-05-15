@@ -1,8 +1,8 @@
 #include "kernel.h"
 
 #include "arch/i386/tty.h"
-#include "arch/i386/idt.h"
-#include "arch/i386/io.h"
+#include "arch/i386/idt/idt.h"
+#include "arch/i386/io/io.h"
 #include "arch/i386/paging/paging.h"
 #include "drivers/ata/ata.h"
 #include "disk/disk.h"
