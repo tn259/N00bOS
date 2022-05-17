@@ -20,3 +20,6 @@ static const constexpr size_t HEAP_ADDRESS           = 0x01000000;
 static const constexpr size_t HEAP_TABLE_ADDRESS     = 0x00007E00;
 // DISK
 static const constexpr size_t DISK_BLOCK_SIZE        = 512;
+// FS
+static const constexpr size_t FS_MAX_FILESYSTEMS     = 512;
+static const constexpr int FS_MAX_FILE_DESCRIPTORS = 512;

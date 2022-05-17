@@ -1,5 +1,9 @@
 #pragma once
 
+namespace fs {
+class filesystem;
+}  // namespace fs
+
 namespace disk {
 
 enum disk_type {
@@ -9,6 +13,7 @@ enum disk_type {
 struct disk {
     disk_type type;
     int sector_size;
+    fs::filesystem* fs;
 };
 
 /**

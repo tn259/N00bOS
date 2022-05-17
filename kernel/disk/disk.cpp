@@ -2,6 +2,8 @@
 #include "disk.h"
 #include "drivers/ata/ata.h"
 
+#include "fs/file.h"
+
 #include "status.h"
 #include "config.h"
 
@@ -19,6 +21,7 @@ void search_and_initialize() {
     memset(&primary_disk, 0, sizeof(primary_disk));
     primary_disk.type = REAL_PHYSICAL;
     primary_disk.sector_size = DISK_BLOCK_SIZE;
+    primary_disk.fs = fs::resolve(&primary_disk);
 }
 
 disk* get(int index) {
