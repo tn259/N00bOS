@@ -7,6 +7,7 @@
 #include "drivers/ata/ata.h"
 #include "disk/disk.h"
 #include "disk/disk_streamer.h"
+#include "fs/file.h"
 #include "mm/heap/kheap.h"
 #include "fs/path_parser.h" 
 
@@ -26,6 +27,8 @@ void kernel_main() {
     ARCH::idt::idt_init();
 
     mm::heap::kheap_init();
+
+    fs::init();
 
     kernel_paging_chunk = ARCH::paging::paging_new(PAGING_IS_WRITABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL);
     ARCH::paging::paging_switch(kernel_paging_chunk);

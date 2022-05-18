@@ -61,3 +61,14 @@ size_t strlen(const char* str) {
     while (str[idx] != '\0') { ++idx; }
     return idx;
 }
+
+char* strcpy(char* dst, const char* src) {
+    auto* dst_start = static_cast<char*>(dst);
+    while (*src != '\0') {
+        *dst = *src;
+        ++src;
+        ++dst;
+    }
+    *dst = '\0';
+    return dst_start;
+}

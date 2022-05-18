@@ -51,3 +51,12 @@ void* memset(void* mem, int value, size_t n);
  * @return size_t - length of string
  */
 size_t strlen(const char* str);
+
+/**
+ * @brief - copy string contents from src to dst
+ * 
+ * @param dst - dst output string
+ * @param src - src input string
+ * @return char* - pointer to start of new dst
+ */
+char* strcpy(char* dst, const char* src);

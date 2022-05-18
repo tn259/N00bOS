@@ -6,10 +6,11 @@ include ./mm/heap/make.config
 include ./disk/make.config
 include ./drivers/ata/make.config
 include ./fs/make.config
+include ./fs/fat/make.config
 include ./libc/make.config # For now just link libc straight into the kernel binary
 
-FILES = $(BUILD_DIR)/$(ARCH_DIR)/kernel.asm.o $(BUILD_DIR)/$(ARCH_DIR)/kernel.cpp.o $(KERNEL_ARCH_OBJS) $(KERNEL_ARCH_PAGING_OBJS) $(IDT_ARCH_OBJS) $(IO_ARCH_OBJS) $(MEMORY_ARCH_OBJS) $(HEAP_ARCH_OBJS) $(ATA_ARCH_OBJS) $(DISK_ARCH_OBJS) $(FS_ARCH_OBJS) $(LIBC_ARCH_OBJS)
-INCLUDES = -I./ -I./$(ARCH_DIR)/ -I./$(ARCH_DIR)/paging -I./$(ARCH_DIR)/idt -I./$(ARCH_DIR)/io -I./mm/ -I./mm/heap/ -I./disk -I./drivers/ata -I./fs -I./libc/
+FILES = $(BUILD_DIR)/$(ARCH_DIR)/kernel.asm.o $(BUILD_DIR)/$(ARCH_DIR)/kernel.cpp.o $(KERNEL_ARCH_OBJS) $(KERNEL_ARCH_PAGING_OBJS) $(IDT_ARCH_OBJS) $(IO_ARCH_OBJS) $(MEMORY_ARCH_OBJS) $(HEAP_ARCH_OBJS) $(ATA_ARCH_OBJS) $(DISK_ARCH_OBJS) $(FS_ARCH_OBJS) $(FAT_ARCH_OBJS) $(LIBC_ARCH_OBJS)
+INCLUDES = -I./ -I./$(ARCH_DIR)/ -I./$(ARCH_DIR)/paging -I./$(ARCH_DIR)/idt -I./$(ARCH_DIR)/io -I./mm/ -I./mm/heap/ -I./disk -I./drivers/ata -I./fs -I./fs/fat -I./libc/
 
 $(BIN_DIR)/$(ARCH_DIR)/kernel.bin: $(FILES)
 	$(HOST)-ld -g -relocatable $(FILES) -o $(BUILD_DIR)/$(ARCH_DIR)/kernelfull.o
@@ -50,6 +51,8 @@ $(BUILD_DIR)/$(ARCH_DIR)/%.cpp.o: ./disk/%.cpp
 $(BUILD_DIR)/$(ARCH_DIR)/%.cpp.o: ./drivers/ata/%.cpp
 	$(CXX) $(INCLUDES) $(CFLAGS) $(CXXFLAGS) -MMD -c $< -o $@
 $(BUILD_DIR)/$(ARCH_DIR)/%.cpp.o: ./fs/%.cpp
+	$(CXX) $(INCLUDES) $(CFLAGS) $(CXXFLAGS) -MMD -c $< -o $@
+$(BUILD_DIR)/$(ARCH_DIR)/%.cpp.o: ./fs/fat/%.cpp
 	$(CXX) $(INCLUDES) $(CFLAGS) $(CXXFLAGS) -MMD -c $< -o $@
 $(BUILD_DIR)/$(ARCH_DIR)/%.cpp.o: ./libc/%.cpp
 	$(CXX) $(INCLUDES) $(CFLAGS) $(CXXFLAGS) -MMD -c $< -o $@

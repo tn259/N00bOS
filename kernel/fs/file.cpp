@@ -1,4 +1,5 @@
 #include "file.h"
+#include "fat/fat16.h"
 #include "disk/disk.h"
 
 #include "libc/string.h"
@@ -21,7 +22,7 @@ file_descriptor* file_descriptors[FS_MAX_FILE_DESCRIPTORS];
  */
 void load() {
     memset(filesystems, 0, sizeof(filesystems));
-    //fs_insert_filesystem(fat16::init());
+    insert_filesystem(fat::fat16_init());
 }
 
 /**
@@ -88,6 +89,7 @@ void insert_filesystem(filesystem* fs) {
         arch::i386::terminal_write("Error: insert_filesystem\n");
         while (1) {}
     }
+    arch::i386::terminal_write(fs->name);
     *fs_ptr = fs;
 }
 
