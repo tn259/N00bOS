@@ -13,7 +13,9 @@ enum disk_type {
 struct disk {
     disk_type type;
     int sector_size;
+    int id;
     fs::filesystem* fs;
+    void* fs_private_data;
 };
 
 /**
