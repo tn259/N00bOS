@@ -72,3 +72,26 @@ char* strcpy(char* dst, const char* src) {
     *dst = '\0';
     return dst_start;
 }
+
+int strncmp(const char* str1, const char* str2, int n) {
+    for (int idx = 0; idx < n; ++idx) {
+        bool end_str1 = str1[idx] == '\0';
+        bool end_str2 = str2[idx] == '\0';
+        if (end_str1 && end_str2) {
+            return 0;
+        }
+        if (end_str1) {
+            return -1;
+        }
+        if (end_str2) {
+            return 1;
+        }
+        if (str1[idx] < str2[idx]) {
+            return -1;
+        }
+        if (str2[idx] > str1[idx]) {
+            return 1;
+        }
+    }
+    return 0;
+}

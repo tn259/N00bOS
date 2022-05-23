@@ -284,7 +284,7 @@ out:
     if (stream) {
         disk::streamer::close(stream);
     }
-    if (result < 0 && private_data) {
+    if (result < 0 && private_data != nullptr) {
         close_fat_private(private_data);
         mm::heap::kfree(private_data);
         d->fs = nullptr;

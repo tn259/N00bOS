@@ -60,3 +60,15 @@ size_t strlen(const char* str);
  * @return char* - pointer to start of new dst
  */
 char* strcpy(char* dst, const char* src);
+
+/**
+ * @brief compare to strings up to a length n or a null terminator - whichever is first
+ * 
+ * @param mem1 - first string
+ * @param mem2 - second string
+ * @param n - number of chars to compare
+ * @return == 0 if equal, 
+ *         >0 if first different unsigned char byte value is greater in mem1
+ *         <0 if first different unsigned char byte value is greater in mem2
+ */
+int strncmp(const char* str1, const char* str2, int n);

@@ -1,4 +1,6 @@
 #include "file.h"
+#include "path_parser.h"
+
 #include "fat/fat16.h"
 #include "disk/disk.h"
 
@@ -9,6 +11,8 @@
 #include "mm/heap/kheap.h"
 
 #include "arch/i386/tty.h"
+
+#include "kernel.h"
 
 namespace fs {
 
@@ -71,6 +75,25 @@ int new_file_descriptor(file_descriptor** out_file_descriptor) {
     return -ENOMEM;
 }
 
+/**
+ * @brief Convert string representation of file mode to FILEMODE value
+ * 
+ * @param str 
+ * @return FILE_MODE 
+ */
+FILE_MODE str_2_filemode(const char* str) {
+    if (strncmp(str, "r", 1) == 0) {
+        return FILE_MODE_READ;
+    }
+    if (strncmp(str, "w", 1) == 0) {
+        return FILE_MODE_WRITE;
+    }
+    if (strncmp(str, "a", 1) == 0) {
+        return FILE_MODE_APPEND;
+    }
+    return FILE_MODE_INVALID;
+}
+
 }  // anonymous namespace
 
 void init() {
@@ -79,7 +102,44 @@ void init() {
 }
 
 int fopen(const char* filename, const char* mode) {
-    return -EIO;
+    auto* root_path = parse(filename);
+    // valid root path parsed?
+    if (!root_path) {
+        return -EINVAL;
+    }
+    if (!root_path->path) {
+        return -EINVAL;
+    }
+
+    auto* disk = disk::get(root_path->drive_number);
+    // disk exists?
+    if (!disk) {
+        return -EIO;
+    }
+    if (!disk->fs) {
+        return -EIO;
+    }
+
+    auto filemode = str_2_filemode(mode);
+    if (filemode == FILE_MODE_INVALID) {
+        return -EINVAL;
+    }
+
+    // now open on the filesystem
+    auto* descriptor_private_data = disk->fs->open(disk, root_path->path, filemode);
+    if (ISERR(descriptor_private_data)) {
+        return ERROR_I(descriptor_private_data);
+    }
+    // setup filedescriptor for the file
+    file_descriptor* descriptor = nullptr;
+    int result = 0;
+    if ((result = new_file_descriptor(&descriptor)) < 0) {
+        return result;
+    }
+    descriptor->d = disk;
+    descriptor->fs = disk->fs;
+    descriptor->private_data = descriptor_private_data;
+    return descriptor->index;
 }
 
 void insert_filesystem(filesystem* fs) {

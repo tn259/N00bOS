@@ -9,3 +9,15 @@
  * @return int - 0 if true, -1 if false 
  */
 int isdigit(int ch);
+
+/**
+ * @brief returns the lowercase character value
+ *
+ * Examples:
+ * 'A' -> 'a'
+ * 'b' -> 'b'
+ *  
+ * @param ch - input character
+ * @return int - lowercase character
+ */
+int tolower(int ch);
