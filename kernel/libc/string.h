@@ -72,3 +72,15 @@ char* strcpy(char* dst, const char* src);
  *         <0 if first different unsigned char byte value is greater in mem2
  */
 int strncmp(const char* str1, const char* str2, int n);
+
+
+/**
+ * @brief compare two null-terminated strings case insensitively
+ * 
+ * @param mem1 - first string
+ * @param mem2 - second string
+ * @return == 0 if equal, 
+ *         >0 if first different unsigned char byte value is greater in mem1
+ *         <0 if first different unsigned char byte value is greater in mem2
+ */
+int strcasecmp(const char* str1, const char* str2);

@@ -1,4 +1,5 @@
-#include <string.h>
+#include "string.h"
+#include "ctype.h"
 
 #include <stddef.h>
 
@@ -94,4 +95,37 @@ int strncmp(const char* str1, const char* str2, int n) {
         }
     }
     return 0;
+}
+
+int strcasecmp(const char* str1, const char* str2) {
+    int idx = 0;
+    int result = 0;
+    while (true) {
+        bool end_str1 = str1[idx] == '\0';
+        bool end_str2 = str2[idx] == '\0';
+        if (end_str1 && end_str2) {
+            result = 0;
+            break;
+        }
+        if (end_str1) {
+            result = -1;
+            break;
+        }
+        if (end_str2) {
+            result = 1;
+            break;
+        }
+        auto c1 = tolower(str1[idx]);
+        auto c2 = tolower(str2[idx]);
+        if (c1 < c2) {
+            result = -1;
+            break;
+        }
+        if (c2 > c1) {
+            result = 1;
+            break;
+        }
+        ++idx;
+    }
+    return result;
 }

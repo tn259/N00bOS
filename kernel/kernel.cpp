@@ -44,5 +44,10 @@ void kernel_main() {
     disk::streamer::seek(ds, 0x1ff); // 500
     disk::streamer::read(ds, buf, 514); // 550
 
+    auto fd = fs::fopen("0:/my_file.txt", "r");
+    if (fd >= 0) {
+        ARCH::terminal_write("We opened a file!");
+    }
+
     enable_interrupts();
 }

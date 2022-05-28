@@ -9,8 +9,13 @@
 #include "libc/string.h"
 
 #include "status.h"
+#include "config.h"
+
+#include "kernel.h"
 
 #include <stdint.h>
+
+// https://www.cs.fsu.edu/~cop4610t/assignments/project3/spec/fatspec.pdf
 
 namespace fs {
 namespace fat {
@@ -22,7 +27,13 @@ namespace {
 
 const constexpr uint8_t FAT16_SIGNATURE = 0x29;
 const constexpr uint8_t FAT16_FAT_ENTRY_SIZE = 0x02;
-const constexpr uint16_t FAT16_FAT_BAD_SECTOR = 0xFF7;
+
+// https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system
+const constexpr uint16_t FAT16_FAT_RESERVED_CLUSTER_START = 0xFFF0;
+const constexpr uint16_t FAT16_FAT_RESERVED_CLUSTER_END = 0xFFF6;
+const constexpr uint16_t FAT16_FAT_BAD_SECTOR = 0xFFF7;
+const constexpr uint16_t FAT16_FAT_LAST_CLUSTER_IN_FILE_START = 0xFFF8;
+const constexpr uint16_t FAT16_FAT_LAST_CLUSTER_IN_FILE_END = 0xFFFF;
 const constexpr uint8_t FAT16_UNUSED = 0x00;
 
 enum fat_item_type {
@@ -99,7 +110,7 @@ struct fat_directory {
 
 struct fat_item {
     union {
-        fat_directory_item* director_item;
+        fat_directory_item* directory_item;
         fat_directory* directory;
     };
     fat_item_type type;
@@ -118,6 +129,7 @@ struct fat_private {
     disk::streamer::disk_stream* cluster_read_stream;
     // streams the FAT table itself 
     disk::streamer::disk_stream* fat_read_stream;
+    // streams the root directory region
     disk::streamer::disk_stream* directory_read_stream;
 };
 
@@ -140,7 +152,7 @@ void init_fat_private(disk::disk* d, fat_private* private_data) {
 }
 
 /**
- * @brief closes members of private data
+ * @brief Closes members of private data
  * 
  * @param private_data 
  */
@@ -170,7 +182,7 @@ int get_directory_total_items(disk::disk* d, uint32_t directory_start_sector) {
     }
 
     // Loop through the directory items until we find the first one that is not populated.
-    // The delimits where the directory items end.
+    // This delimits where the directory items end.
     int num_items = 0;
     fat_directory_item item;
     while (true) {
@@ -237,6 +249,352 @@ int get_root_directory(disk::disk* d, fat_private* private_data, fat_directory* 
     return 0;
 }
 
+int get_fat_entry(disk::disk* d, int cluster) {
+    auto* private_data = static_cast<fat_private*>(d->fs_private_data);
+    auto* fat_stream = private_data->fat_read_stream;
+    if (fat_stream == nullptr) {
+        return -1;
+    }
+
+    // first FAT sector starts after the reserved sectors
+    auto first_fat_sector = private_data->header.primary_header.reserved_sectors;
+    auto fat_table_pos = first_fat_sector * d->sector_size;
+    int res = -1;
+    // TODO(tn259) this seek pos does not make sense
+    res = disk::streamer::seek(fat_stream, fat_table_pos * (cluster * FAT16_FAT_ENTRY_SIZE));
+    if (res < 0) {
+        return res;
+    }
+    // fat entry size is 2 bytes
+    uint16_t fat_entry = 0;
+    res = disk::streamer::read(fat_stream, &fat_entry, sizeof(fat_entry));
+    if (res < 0) {
+        return res;
+    }
+
+    return fat_entry;
+}
+
+/**
+ * @brief Gets the first cluster index for the fat directory item
+ * 
+ * @param directory_item - the fat directory item 
+ * @return uint32_t - the first cluster index
+ */
+uint32_t get_first_cluster(fat_directory_item* directory_item) {
+    return (directory_item->hi_16bits_first_cluster << 16) | directory_item->lo_16bits_first_cluster;
+}
+
+/**
+ * @brief Gets the cluster index corresponsing to the the byte offset from the starting cluster index
+ * 
+ * @param d - disk
+ * @param starting_cluster - cluster to start from 
+ * @param offset - byte offset into cluster data section
+ * @return int - the cluster
+ */
+int get_cluster(disk::disk* d, int starting_cluster, int offset) {
+    auto* private_data = static_cast<fat_private*>(d->fs_private_data);
+    auto cluster_size_bytes = private_data->header.primary_header.sectors_per_cluster * d->sector_size;
+    auto cluster = starting_cluster;
+    auto cluster_offset = offset / cluster_size_bytes;
+    for (int idx = 0; idx < cluster_offset; ++idx) {
+        // TODO(tn259) Find the first cluster that is not used?
+        auto fat_entry = get_fat_entry(d, cluster);
+        if (fat_entry < 0) {
+            return fat_entry;
+        }
+        if (FAT16_FAT_LAST_CLUSTER_IN_FILE_START <= fat_entry && fat_entry <= FAT16_FAT_LAST_CLUSTER_IN_FILE_END) {
+            return -EIO;
+        }
+        if (fat_entry == FAT16_FAT_BAD_SECTOR) {
+            return -EIO;
+        }
+        if (FAT16_FAT_RESERVED_CLUSTER_START <= fat_entry && fat_entry <= FAT16_FAT_RESERVED_CLUSTER_END) {
+            return -EIO;
+        }
+        if (fat_entry == FAT16_UNUSED) {
+            return -EIO;
+        }
+        cluster = fat_entry;
+    }
+    return cluster;
+}
+
+/**
+ * @brief Gets a sector index from a cluster index
+ * 
+ * @param private_data
+ * @param cluster - the cluster index
+ * @return int - the sector index
+ */
+int cluster_to_sector(fat_private* private_data, int cluster)
+{
+    // TODO(tn259) why is it cluster - 2?
+    return private_data->root_directory.sector_pos_end + ((cluster - 2) * private_data->header.primary_header.sectors_per_cluster);
+}
+
+/**
+ * @brief Read total_bytes from offset into starting_cluster using the disk_stream
+ * 
+ * @param d - the disk
+ * @param stream - streamer instance to read from
+ * @param starting_cluster - the starting cluster to read from
+ * @param offset - the offset in bytes into the cluster
+ * @param total_bytes - number of bytes to read
+ * @param output - output buffer to read into
+ * @return int - == 0 on success
+ */
+int read_internal_from_stream(disk::disk* d, disk::streamer::disk_stream* stream, int starting_cluster, int offset, int total_bytes, void* output) {
+    auto* private_data = static_cast<fat_private*>(d->fs_private_data);
+    auto cluster_size_bytes = private_data->header.primary_header.sectors_per_cluster * d->sector_size;
+
+    int bytes_read = 0;
+    int res = 0;
+    while (bytes_read < total_bytes) {
+        auto cluster = get_cluster(d, starting_cluster, offset);
+        if (cluster < 0) {
+            return cluster;
+        }
+        auto offset_from_cluster = offset % cluster_size_bytes;
+
+        auto starting_sector = cluster_to_sector(private_data, cluster);
+        auto starting_pos = (starting_sector * d->sector_size) * offset_from_cluster;
+
+        auto bytes_remaining = total_bytes - bytes_read;
+        auto total_to_read = bytes_remaining > cluster_size_bytes ? cluster_size_bytes : bytes_remaining;
+        if ((res = disk::streamer::seek(stream, starting_pos)) < 0) {
+            return res;
+        }
+        if ((res = disk::streamer::read(stream, output, total_to_read)) < 0) {
+            return res;
+        }
+        bytes_read += total_to_read;
+    }
+    return res;
+}
+
+/**
+ * @brief Read total_bytes from offset into starting_cluster
+ * 
+ * @param d - the disk
+ * @param starting_cluster - the starting cluster to read from
+ * @param offset - the offset in bytes into the cluster
+ * @param total_bytes - number of bytes to read
+ * @param output - output buffer to read into
+ * @return int - == 0 on success
+ */
+int read_internal(disk::disk* d, int starting_cluster, int offset, int total_bytes, void* output) {
+    auto* private_data = static_cast<fat_private*>(d->fs_private_data);
+    auto* cluster_stream = private_data->cluster_read_stream;
+    return read_internal_from_stream(d, cluster_stream, starting_cluster, offset, total_bytes, output);
+}
+
+/**
+ * @brief Deallocates the fat_directory provided
+ * 
+ * @param directory 
+ */
+void directory_free(fat_directory* directory) {
+    if (directory != nullptr) {
+        if (directory->item != nullptr) {
+            mm::heap::kfree(directory->item);
+        }
+        mm::heap::kfree(directory);
+    }
+}
+
+/**
+ * @brief Deallocates the fat_item provided
+ * 
+ * @param item 
+ */
+void item_free(fat_item* item) {
+    switch (item->type) {
+        case FAT_ITEM_TYPE_DIRECTORY:
+            directory_free(item->directory);
+            break;
+        case FAT_ITEM_TYPE_FILE:
+            mm::heap::kfree(item->directory_item);
+            break;
+        default:
+            break;
+    }
+    mm::heap::kfree(item);
+}
+
+/**
+ * @brief Loads/Deserializes a directory from disk 
+ * 
+ * @param d - the disk
+ * @param directory_item - fat_directory_item representation of the directory
+ * @return fat_directory* - the fat_directory representation of the directory
+ */
+fat_directory* load_directory(disk::disk* d, fat_directory_item* directory_item) {
+    if (!(directory_item->attribute & FAT_FILE_SUBDIRECTORY)) {
+        return nullptr;
+    }
+    auto* private_data = static_cast<fat_private*>(d->fs_private_data);
+    auto* directory = static_cast<fat_directory*>(mm::heap::kzalloc(sizeof(fat_directory)));
+    if (directory == nullptr) {
+        return nullptr;
+    }
+    
+    auto cluster = get_first_cluster(directory_item);
+    auto sector = cluster_to_sector(private_data, cluster);
+    auto total_items = get_directory_total_items(d, sector);
+    directory->total = total_items;
+    auto directory_size = directory->total * sizeof(fat_directory_item);
+    directory->item = static_cast<fat_directory_item*>(mm::heap::kzalloc(directory_size));
+    if (directory->item == nullptr) {
+        directory_free(directory);
+        return nullptr;
+    }
+
+    if (read_internal(d, cluster, 0x00, directory_size, directory->item) < 0) {
+        directory_free(directory);
+        return nullptr;
+    }
+    return directory; 
+}
+
+/**
+ * @brief Allocates and returns a clone of directory_item
+ * 
+ * @param directory_item 
+ * @param size 
+ * @return fat_directory_item* 
+ */
+fat_directory_item* clone_directory_item(fat_directory_item* directory_item, size_t size) {
+    if (size < sizeof(fat_directory_item)) {
+        return nullptr;
+    }
+    auto* copy = static_cast<fat_directory_item*>(mm::heap::kzalloc(size));
+    if (copy == nullptr) {
+        return nullptr;
+    }
+    memcpy(copy, directory_item, size);
+    return copy;
+}
+
+/**
+ * @brief Creates a new fat_item from the fat_directory_item
+ * 
+ * @param d - used to load in subdirectory if directory_item is a directory
+ * @param directory_item - the directory_item
+ * @return fat_item* - the new fat_item
+ */
+fat_item* new_item(disk::disk* d, fat_directory_item* directory_item) {
+    auto* item = static_cast<fat_item*>(mm::heap::kzalloc(sizeof(fat_item)));
+    if (item == nullptr) {
+        return nullptr;
+    }
+
+    if (directory_item->attribute & FAT_FILE_SUBDIRECTORY) {
+        // this is a directory
+        item->directory = load_directory(d, directory_item);
+        item->type = FAT_ITEM_TYPE_DIRECTORY;
+        return item; // TODO(tn259) - should we be breaking here?
+    }
+    // this is a file
+    item->type = FAT_ITEM_TYPE_FILE;
+    item->directory_item = clone_directory_item(directory_item, sizeof(fat_directory_item));
+    return item;
+}
+
+/**
+ * @brief Copy null terminated a string from in to out truncating at any first space encountered
+ * 
+ * @param out - pointer to out buffer
+ * @param in - in buffer
+ */
+void get_space_terminated_string(char** out, const char* in) {
+    while (*in != 0x00 && *in != 0x20) {
+        **out = *in;
+        ++*out;
+        ++in;
+    }
+    // truncate ending space with a null
+    if (*in == 0x20) {
+        **out = 0x00;
+    }
+}
+
+/**
+ * @brief Get the filename from the FAT filename field.
+ *        This should be filename + '.' + ext where filename and ext are the FAT item attributes 
+ * 
+ * @param directory_item - the FAT item
+ * @param out - output
+ * @param max_length - max length of output
+ */
+void get_filename(fat_directory_item* directory_item, char* out, int max_length) {
+    memset(out, 0x00, max_length);
+    char* out_tmp = out;
+    get_space_terminated_string(&out_tmp, reinterpret_cast<const char*>(directory_item->filename));
+    if (directory_item->ext[0] != 0x00 && directory_item->ext[0] != 0x20) {
+        *out_tmp++ = '.';
+        get_space_terminated_string(&out_tmp, reinterpret_cast<const char*>(directory_item->ext));
+    }
+}
+
+/**
+ * @brief Tries to find the item 'name' in the directory 'directory'
+ * 
+ * @param d - the disk
+ * @param directory - the directory
+ * @param name - the name of the item
+ * @return fat_item* - the deserialized located item
+ */
+fat_item* find_item_in_directory(disk::disk* d, fat_directory* directory, const char* name) {
+    fat_item* item = nullptr;
+    char filename[FS_MAX_PATH_SIZE];
+    for (int item_idx = 0; item_idx < directory->total; ++item_idx) {
+        get_filename(&directory->item[item_idx], filename, sizeof(filename));
+        if (strcasecmp(filename, name) == 0) {
+            item = new_item(d, &directory->item[item_idx]);
+            break;
+        }
+    }
+    return item;
+}
+
+/**
+ * @brief Get and deserialize the fat item from disk identified by a path
+ *
+ * We traverse the path parts until we can deserialize leaf fat_item
+ *  
+ * @param d - the disk
+ * @param part - the path part identifier
+ * @return fat_item* - the deserialized fat item
+ */
+fat_item* get_item(disk::disk* d, path_part* part) {
+    auto* private_data = static_cast<fat_private*>(d->fs_private_data);
+    // first get the root directory item
+    auto* root_item = find_item_in_directory(d, &private_data->root_directory, part->part_name);
+    if (root_item == nullptr) {
+        return nullptr;
+    }
+
+    auto* current_item = root_item;
+    auto* next_part = part->next;
+    while (next_part != nullptr) {
+        if (current_item->type != FAT_ITEM_TYPE_DIRECTORY) {
+            // e.g. we were searching for c.txt in /a/b/c.txt but a or b turned out not to be directories to traverse
+            current_item = nullptr;
+            return current_item;
+        }
+        auto* tmp_item = find_item_in_directory(d, current_item->directory, next_part->part_name);
+        // TODO(tn259) deallocate everything if null?
+        item_free(current_item);
+        current_item = tmp_item;
+        next_part = next_part->next;
+    }
+    // current item is now a file
+    // e.g. c.txt in /a/b/c.txt
+    return current_item; 
+}
+
 }  // namespace anonymous
 
 filesystem* fat16_init() {
@@ -245,7 +603,23 @@ filesystem* fat16_init() {
 }
 
 void* fat16_open(disk::disk* d, path_part* path, FILE_MODE mode) {
-    return 0;
+    // TODO(tn259) implement file system writing
+    if (mode != FILE_MODE_READ) {
+        return ERROR(-EROFS);
+    }
+
+    auto* descriptor = static_cast<fat_item_descriptor*>(mm::heap::kzalloc(sizeof(fat_item_descriptor)));
+    if (descriptor == nullptr) {
+        return ERROR(-ENOMEM);
+    }
+
+    descriptor->item = get_item(d, path);
+    if (descriptor->item == nullptr) {
+        return ERROR(-EIO);
+    }
+
+    descriptor->pos = 0;
+    return descriptor;
 }
 
 int fat16_resolve(disk::disk* d) {
