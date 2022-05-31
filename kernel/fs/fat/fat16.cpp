@@ -245,6 +245,7 @@ int get_root_directory(disk::disk* d, fat_private* private_data, fat_directory* 
 
     directory->sector_pos = root_dir_sector_pos;
     directory->sector_pos_end = root_dir_sector_pos + (root_dir_total_sectors * d->sector_size);
+    directory->total = directory_total_items;
     directory->item = directory_as_item;
     return 0;
 }
