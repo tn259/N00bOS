@@ -7,6 +7,9 @@
 #include "mm/heap/kheap.h"
 
 #include "libc/string.h"
+#include "libc/stdlib.h"
+
+#include "arch/i386/tty.h"
 
 #include "status.h"
 #include "config.h"
@@ -15,6 +18,7 @@
 
 #include <stdint.h>
 
+namespace ARCH = arch::i386;
 // https://www.cs.fsu.edu/~cop4610t/assignments/project3/spec/fatspec.pdf
 
 namespace fs {
@@ -163,13 +167,34 @@ void close_fat_private(fat_private* private_data) {
 }
 
 /**
- * @brief Calculates the number of directory items in a directory
+ * @brief Allocates and returns a clone of directory_item
+ * 
+ * @param directory_item 
+ * @param size 
+ * @return fat_directory_item* 
+ */
+fat_directory_item* clone_directory_item(fat_directory_item* directory_item, size_t size) {
+    if (size < sizeof(fat_directory_item)) {
+        return nullptr;
+    }
+    auto* copy = static_cast<fat_directory_item*>(mm::heap::kzalloc(size));
+    if (copy == nullptr) {
+        return nullptr;
+    }
+    memcpy(copy, directory_item, size);
+    return copy;
+}
+
+/**
+ * @brief Loads the directory items in a directory
  * 
  * @param d - disk to read from
  * @param directory_start_sector - start sector position of where the directory is on disk
+ * @param directory - populate the items on this directory
+ * 
  * @return int - >= 0 on success
  */
-int get_directory_total_items(disk::disk* d, uint32_t directory_start_sector) {
+int get_directory_total_items(disk::disk* d, uint32_t directory_start_sector, fat_directory* directory=nullptr) {
     int result = 0;
 
     auto* private_data = static_cast<fat_private*>(d->fs_private_data);
@@ -197,57 +222,13 @@ int get_directory_total_items(disk::disk* d, uint32_t directory_start_sector) {
             // item is unused so do not count it
             continue;
         }
+        if (directory != nullptr) {
+            // populate the items if a directory is provided
+            directory->item[num_items] = *clone_directory_item(&item, sizeof(fat_directory_item));
+        }
         ++num_items;
     }
     return num_items;
-}
-
-/**
- * @brief Deserializeses the root directory structure from disk
- * 
- * @param d - the disk to read from
- * @param private_data - private fat data
- * @param directory - root directory of fat filesystem to populate
- * @return int - 0 on success
- */
-int get_root_directory(disk::disk* d, fat_private* private_data, fat_directory* directory) {
-    auto* primary_header = &private_data->header.primary_header;
-    // get the root dir sector idx, in other words which sector is it?
-    // directories and files i.e. data starts after the FAT metadata
-    auto root_dir_sector_pos = (primary_header->fat_copies * primary_header->sectors_per_fat) + primary_header->reserved_sectors;
-    auto root_dir_entries = primary_header->root_dir_entries;
-    // get root dir size and number of sectors based on the number of entries in the root dir
-    auto root_dir_size = root_dir_entries * sizeof(fat_item);
-    auto root_dir_total_sectors = root_dir_size / d->sector_size;
-    if (root_dir_size % d->sector_size != 0) { // round up
-        ++root_dir_total_sectors;
-    }
-
-    auto directory_total_items = get_directory_total_items(d, root_dir_sector_pos);
-    if (directory_total_items < 0) {
-        return directory_total_items;
-    }
-
-    auto* directory_as_item = static_cast<fat_directory_item*>(mm::heap::kzalloc(root_dir_size));
-    if (directory_as_item == nullptr) {
-        return -ENOMEM;
-    }
-
-    int result = 0;
-    auto* directory_stream = private_data->directory_read_stream;
-    if ((result = disk::streamer::seek(directory_stream, root_dir_sector_pos * d->sector_size)) != 0) {
-        return result;
-    }
-
-    if ((result = disk::streamer::read(directory_stream, &directory_as_item, sizeof(fat_directory_item))) != 0) {
-        return result;
-    }
-
-    directory->sector_pos = root_dir_sector_pos;
-    directory->sector_pos_end = root_dir_sector_pos + (root_dir_total_sectors * d->sector_size);
-    directory->total = directory_total_items;
-    directory->item = directory_as_item;
-    return 0;
 }
 
 int get_fat_entry(disk::disk* d, int cluster) {
@@ -398,8 +379,10 @@ int read_internal(disk::disk* d, int starting_cluster, int offset, int total_byt
  */
 void directory_free(fat_directory* directory) {
     if (directory != nullptr) {
-        if (directory->item != nullptr) {
-            mm::heap::kfree(directory->item);
+        for (int idx = 0; idx < directory->total; ++idx) {
+            if (&directory->item[idx] != nullptr) {
+                mm::heap::kfree(&directory->item[idx]);
+            }
         }
         mm::heap::kfree(directory);
     }
@@ -457,25 +440,6 @@ fat_directory* load_directory(disk::disk* d, fat_directory_item* directory_item)
         return nullptr;
     }
     return directory; 
-}
-
-/**
- * @brief Allocates and returns a clone of directory_item
- * 
- * @param directory_item 
- * @param size 
- * @return fat_directory_item* 
- */
-fat_directory_item* clone_directory_item(fat_directory_item* directory_item, size_t size) {
-    if (size < sizeof(fat_directory_item)) {
-        return nullptr;
-    }
-    auto* copy = static_cast<fat_directory_item*>(mm::heap::kzalloc(size));
-    if (copy == nullptr) {
-        return nullptr;
-    }
-    memcpy(copy, directory_item, size);
-    return copy;
 }
 
 /**
@@ -594,6 +558,39 @@ fat_item* get_item(disk::disk* d, path_part* part) {
     // current item is now a file
     // e.g. c.txt in /a/b/c.txt
     return current_item; 
+}
+
+/**
+ * @brief Deserializeses the root directory structure from disk
+ * 
+ * @param d - the disk to read from
+ * @param private_data - private fat data
+ * @param directory - root directory of fat filesystem to populate
+ * @return int - 0 on success
+ */
+int get_root_directory(disk::disk* d, fat_private* private_data, fat_directory* directory) {
+    auto* primary_header = &private_data->header.primary_header;
+    // get the root dir sector idx, in other words which sector is it?
+    // directories and files i.e. data starts after the FAT metadata
+    auto root_dir_sector_pos = (primary_header->fat_copies * primary_header->sectors_per_fat) + primary_header->reserved_sectors;
+    auto root_dir_entries = primary_header->root_dir_entries;
+    // get root dir size and number of sectors based on the number of entries in the root dir
+    auto root_dir_size = root_dir_entries * sizeof(fat_item);
+    auto root_dir_total_sectors = root_dir_size / d->sector_size;
+    if (root_dir_size % d->sector_size != 0) { // round up
+        ++root_dir_total_sectors;
+    }
+
+    auto directory_total_items = get_directory_total_items(d, root_dir_sector_pos, directory);
+    if (directory_total_items < 0) {
+        return directory_total_items;
+    }
+
+    // set the sectory offsets
+    directory->total = directory_total_items;
+    directory->sector_pos = root_dir_sector_pos;
+    directory->sector_pos_end = root_dir_sector_pos + (root_dir_total_sectors * d->sector_size);
+    return 0;
 }
 
 }  // namespace anonymous

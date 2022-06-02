@@ -46,13 +46,13 @@ void kernel_main() {
     disk::streamer::seek(ds, 0x1ff); // 500
     disk::streamer::read(ds, buf, 514); // 550
 
-    /*auto fd = fs::fopen("0:/my_file.txt", "r");
+    auto fd = fs::fopen("0:/my_file.txt", "r");
     if (fd >= 0) {
         ARCH::terminal_write("We opened a file!");
-    }*/
+    }
     // test itoa
 
-    ARCH::terminal_write_char('\n');
+    /*ARCH::terminal_write_char('\n');
     char buf2[10];
     itoa(0, buf2, 10);
     ARCH::terminal_write(buf2);
@@ -65,7 +65,7 @@ void kernel_main() {
     ARCH::terminal_write_char('\n');
     char buf4[10];
     itoa(-999999, buf4, 10);
-    ARCH::terminal_write(buf4);
+    ARCH::terminal_write(buf4);*/
 
     enable_interrupts();
 }
