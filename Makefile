@@ -97,6 +97,8 @@ all: boot kernel
 	sudo mkdir -p /mnt/d
 	sudo mount -t vfat $(BIN_DIR)/$(ARCH_DIR)/os.bin /mnt/d
 	sudo cp ./my_file.txt /mnt/d
+	sudo cp -r my_dir /mnt/d
+	ls /mnt/d/my_dir
 	sudo umount /mnt/d
 
 #################################

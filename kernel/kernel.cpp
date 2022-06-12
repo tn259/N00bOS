@@ -48,24 +48,12 @@ void kernel_main() {
 
     auto fd = fs::fopen("0:/my_file.txt", "r");
     if (fd >= 0) {
-        ARCH::terminal_write("We opened a file!");
+        ARCH::terminal_write("We opened a root file!\n");
     }
-    // test itoa
-
-    /*ARCH::terminal_write_char('\n');
-    char buf2[10];
-    itoa(0, buf2, 10);
-    ARCH::terminal_write(buf2);
-
-    ARCH::terminal_write_char('\n');
-    char buf3[10];
-    itoa(12345, buf3, 10);
-    ARCH::terminal_write(buf3);
-
-    ARCH::terminal_write_char('\n');
-    char buf4[10];
-    itoa(-999999, buf4, 10);
-    ARCH::terminal_write(buf4);*/
+    auto fd2 = fs::fopen("0:/my_dir/my_file2.txt", "r");
+    if (fd2 >= 0) {
+        ARCH::terminal_write("We opened a directory file!\n");
+    }
 
     enable_interrupts();
 }

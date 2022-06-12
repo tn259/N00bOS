@@ -242,8 +242,7 @@ int get_fat_entry(disk::disk* d, int cluster) {
     auto first_fat_sector = private_data->header.primary_header.reserved_sectors;
     auto fat_table_pos = first_fat_sector * d->sector_size;
     int res = -1;
-    // TODO(tn259) this seek pos does not make sense
-    res = disk::streamer::seek(fat_stream, fat_table_pos * (cluster * FAT16_FAT_ENTRY_SIZE));
+    res = disk::streamer::seek(fat_stream, fat_table_pos + (cluster * FAT16_FAT_ENTRY_SIZE));
     if (res < 0) {
         return res;
     }
@@ -264,7 +263,8 @@ int get_fat_entry(disk::disk* d, int cluster) {
  * @return uint32_t - the first cluster index
  */
 uint32_t get_first_cluster(fat_directory_item* directory_item) {
-    return (directory_item->hi_16bits_first_cluster << 16) | directory_item->lo_16bits_first_cluster;
+    //return (directory_item->hi_16bits_first_cluster << 16) | directory_item->lo_16bits_first_cluster;
+    return directory_item->hi_16bits_first_cluster | directory_item->lo_16bits_first_cluster;
 }
 
 /**
@@ -341,7 +341,7 @@ int read_internal_from_stream(disk::disk* d, disk::streamer::disk_stream* stream
         auto offset_from_cluster = offset % cluster_size_bytes;
 
         auto starting_sector = cluster_to_sector(private_data, cluster);
-        auto starting_pos = (starting_sector * d->sector_size) * offset_from_cluster;
+        auto starting_pos = (starting_sector * d->sector_size) + offset_from_cluster;
 
         auto bytes_remaining = total_bytes - bytes_read;
         auto total_to_read = bytes_remaining > cluster_size_bytes ? cluster_size_bytes : bytes_remaining;
@@ -459,7 +459,7 @@ fat_item* new_item(disk::disk* d, fat_directory_item* directory_item) {
         // this is a directory
         item->directory = load_directory(d, directory_item);
         item->type = FAT_ITEM_TYPE_DIRECTORY;
-        return item; // TODO(tn259) - should we be breaking here?
+        return item;
     }
     // this is a file
     item->type = FAT_ITEM_TYPE_FILE;
@@ -473,14 +473,14 @@ fat_item* new_item(disk::disk* d, fat_directory_item* directory_item) {
  * @param out - pointer to out buffer
  * @param in - in buffer
  */
-void get_space_terminated_string(char** out, const char* in) {
-    while (*in != 0x00 && *in != 0x20) {
-        **out = *in;
-        ++*out;
-        ++in;
+void get_space_terminated_string(char** out, const char* in, int in_length) {
+    int idx = 0;
+    while (idx < in_length && in[idx] != 0x00 && in[idx] != 0x20) {
+        **out = in[idx];
+        ++idx; ++*out;
     }
-    // truncate ending space with a null
-    if (*in == 0x20) {
+    if (**out == 0x20) {
+        // truncate as NULL terminated
         **out = 0x00;
     }
 }
@@ -496,10 +496,10 @@ void get_space_terminated_string(char** out, const char* in) {
 void get_filename(fat_directory_item* directory_item, char* out, int max_length) {
     memset(out, 0x00, max_length);
     char* out_tmp = out;
-    get_space_terminated_string(&out_tmp, reinterpret_cast<const char*>(directory_item->filename));
+    get_space_terminated_string(&out_tmp, reinterpret_cast<const char*>(directory_item->filename), sizeof(directory_item->filename));
     if (directory_item->ext[0] != 0x00 && directory_item->ext[0] != 0x20) {
         *out_tmp++ = '.';
-        get_space_terminated_string(&out_tmp, reinterpret_cast<const char*>(directory_item->ext));
+        get_space_terminated_string(&out_tmp, reinterpret_cast<const char*>(directory_item->ext), sizeof(directory_item->ext));
     }
 }
 
@@ -513,8 +513,8 @@ void get_filename(fat_directory_item* directory_item, char* out, int max_length)
  */
 fat_item* find_item_in_directory(disk::disk* d, fat_directory* directory, const char* name) {
     fat_item* item = nullptr;
-    char filename[FS_MAX_PATH_SIZE];
     for (int item_idx = 0; item_idx < directory->total; ++item_idx) {
+        char filename[FS_MAX_PATH_SIZE];
         get_filename(&directory->item[item_idx], filename, sizeof(filename));
         if (strcasecmp(filename, name) == 0) {
             item = new_item(d, &directory->item[item_idx]);
@@ -575,7 +575,7 @@ int get_root_directory(disk::disk* d, fat_private* private_data, fat_directory* 
     auto root_dir_sector_pos = (primary_header->fat_copies * primary_header->sectors_per_fat) + primary_header->reserved_sectors;
     auto root_dir_entries = primary_header->root_dir_entries;
     // get root dir size and number of sectors based on the number of entries in the root dir
-    auto root_dir_size = root_dir_entries * sizeof(fat_item);
+    auto root_dir_size = root_dir_entries * sizeof(fat_directory_item);
     auto root_dir_total_sectors = root_dir_size / d->sector_size;
     if (root_dir_size % d->sector_size != 0) { // round up
         ++root_dir_total_sectors;
@@ -589,7 +589,7 @@ int get_root_directory(disk::disk* d, fat_private* private_data, fat_directory* 
     // set the sectory offsets
     directory->total = directory_total_items;
     directory->sector_pos = root_dir_sector_pos;
-    directory->sector_pos_end = root_dir_sector_pos + (root_dir_total_sectors * d->sector_size);
+    directory->sector_pos_end = root_dir_sector_pos + (root_dir_size / d->sector_size);
     return 0;
 }
 
