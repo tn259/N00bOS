@@ -23,6 +23,7 @@ namespace fs::fat {
 
 void* fat16_open(disk::disk* d, path_part* path, FILE_MODE mode);
 int fat16_read(disk::disk* d, void* private_data, size_t block_size, size_t num_blocks, char* output);
+int fat16_seek(void* private_data, int offset, FILE_SEEK_MODE seek_mode);
 int fat16_resolve(disk::disk* d);
 
 namespace {
@@ -141,6 +142,7 @@ struct fat_private {
 filesystem fat16_fs = {
     .open    = fat16_open,
     .read    = fat16_read,
+    .seek    = fat16_seek,
     .resolve = fat16_resolve};
 
 /**
@@ -603,7 +605,7 @@ int get_root_directory(disk::disk* d, fat_private* private_data, fat_directory* 
     return 0;
 }
 
-} // namespace
+} // anonymous namespace
 
 filesystem* fat16_init() {
     strcpy(static_cast<char*>(fat16_fs.name), "FAT16"); // NOLINT(clang-analyzer-security.insecureAPI.strcpy)
@@ -633,12 +635,37 @@ void* fat16_open(disk::disk* d, path_part* path, FILE_MODE mode) {
 int fat16_read(disk::disk* d, void* private_data, size_t block_size, size_t num_blocks, char* output) {
     auto* fat16_desc = static_cast<fat_item_descriptor*>(private_data);
     auto* item       = fat16_desc->item;
+    auto offset      = fat16_desc->pos;
     if (item->type != FAT_ITEM_TYPE_FILE) {
         // TODO(tn259) Consider trying to read directories later on
         return -EINVAL;
     }
     auto cluster = get_first_cluster(item->directory_item);
-    return read_internal(d, cluster, 0, block_size * num_blocks, static_cast<void*>(output)); // NOLINT(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
+    return read_internal(d, cluster, offset, block_size * num_blocks, static_cast<void*>(output)); // NOLINT(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
+}
+
+int fat16_seek(void* private_data, int offset, FILE_SEEK_MODE seek_mode) {
+    auto* fat16_desc = static_cast<fat_item_descriptor*>(private_data);
+    if (fat16_desc->item->type != FAT_ITEM_TYPE_FILE) {
+        return -EINVAL;
+    }
+    auto& file_offset = fat16_desc->pos;
+    switch (seek_mode) {
+        case SEEK_SET:
+            file_offset = offset;
+            break;
+        case SEEK_END:
+            // TODO(tn259) implement
+            return -EINVAL;
+            break;
+        case SEEK_CURRENT:
+            file_offset += offset;
+            break;
+        default:
+            return -EINVAL;
+            break;
+    }
+    return 0;
 }
 
 int fat16_resolve(disk::disk* d) {

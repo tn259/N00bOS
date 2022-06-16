@@ -58,11 +58,20 @@ void kernel_main() {
     auto fd2 = fs::fopen("0:/my_dir/my_file2.txt", "r");
     if (fd2 >= 0) {
         ARCH::terminal_write("We opened a directory file!\n");
-        char buf[13];
-        fs::fread(buf, 12, 1, fd2);
-        buf[12] = '\0';
+        fs::fseek(fd2, 3, fs::SEEK_SET);
+        char buf[10];
+        fs::fread(buf, 9, 1, fd2);
+        buf[9] = '\0';
         ARCH::terminal_write("Content:");
         ARCH::terminal_write(buf);
+        ARCH::terminal_write("\n");
+        // now seek current
+        fs::fseek(fd2, 1, fs::SEEK_CURRENT);
+        char buf2[8];
+        fs::fread(buf2, 8, 1, fd2);
+        buf2[7] = '\0';
+        ARCH::terminal_write("Content:");
+        ARCH::terminal_write(buf2);
         ARCH::terminal_write("\n");
     }
 
