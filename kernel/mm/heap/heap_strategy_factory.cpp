@@ -4,9 +4,7 @@
 #include "find_first_fit_strategy.h"
 #include "heap.h"
 
-namespace mm {
-namespace heap {
-namespace strategy_factory {
+namespace mm::heap::strategy_factory {
 
 void make_strategy(heap_algorithm algorithm, heap_strategy* strategy_ptr) { // NOLINT(readability-convert-member-functions-to-static)
     switch (algorithm) {
@@ -20,6 +18,4 @@ void make_strategy(heap_algorithm algorithm, heap_strategy* strategy_ptr) { // N
     strategy_ptr->create = &default_heap_create;
 }
 
-}  // namespace strategy_factory
-}  // namespace heap
-}  // namespace mm
+} // namespace mm::heap::strategy_factory

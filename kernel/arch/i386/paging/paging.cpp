@@ -3,9 +3,7 @@
 #include "mm/heap/kheap.h"
 #include "status.h"
 
-namespace arch {
-namespace i386 {
-namespace paging {
+namespace arch::i386::paging {
 
 namespace {
 PAGING_ENTRY* current_directory;
@@ -89,6 +87,4 @@ int paging_set(const PAGING_ENTRY* directory, void* virtual_address, PAGING_ENTR
     return 0;
 }
 
-} // namespace paging
-} // namespace i386
-} // namespace arch
+} // namespace arch::i386::paging

@@ -8,5 +8,5 @@ namespace fat {
 
 filesystem* fat16_init();
 
-}  // namespace fat
-}  // namespace fs
+} // namespace fat
+} // namespace fs

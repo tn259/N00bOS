@@ -8,9 +8,7 @@
  * https://wiki.osdev.org/Interrupt_Descriptor_Table
  **/
 
-namespace arch {
-namespace i386 {
-namespace idt {
+namespace arch::i386::idt {
 
 static const constexpr uint16_t KERNEL_CODE_SELECTOR  = 0x08;
 static const constexpr uint16_t KERNEL_DATA_SELECTOR  = 0x10;
@@ -31,9 +29,7 @@ struct idtr_descriptor {
 
 void idt_init();
 
-}  // namespace idt
-}  // namespace i386
-}  // namespace arch
+} // namespace arch::i386::idt
 
 extern "C" {
 void enable_interrupts();

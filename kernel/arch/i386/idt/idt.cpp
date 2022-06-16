@@ -1,18 +1,16 @@
 #include "idt.h"
+
+#include <stddef.h>
+
 #include "io.h"
 #include "libc/string.h"
 #include "tty.h" // just for printing
-
-#include <stddef.h>
 
 /**
  * https://wiki.osdev.org/Interrupt_Descriptor_Table
  **/
 
-
-namespace arch {
-namespace i386 {
-namespace idt {
+namespace arch::i386::idt {
 
 idt_descriptor idt_descs[NOOBOS_TOTAL_INTERRUPTS];
 idtr_descriptor idtr_desc;
@@ -27,31 +25,26 @@ const constexpr uint8_t MASTER_PIC_CONTROL_DATA_IO_PORT    = MASTER_PIC_CONTROL_
 const constexpr uint8_t PIC_END_OF_INTERRUPT_COMMAND = 0x20;
 
 } // namespace
-} // namespace idt
-} // namespace i386
-} // namespace arch
+} // namespace arch::i386::idt
 
 extern "C" {
 
-using namespace arch::i386;
+namespace ARCH = arch::i386;
 
-void idt_load(idt::idtr_descriptor* ptr);
+void idt_load(ARCH::idt::idtr_descriptor* ptr);
 void int21h();
 void no_interrupt();
 
 void int21h_handler() {
-    terminal_write("Keyboard pressed\n");
-    outb(idt::MASTER_PIC_CONTROL_COMMAND_IO_PORT, idt::PIC_END_OF_INTERRUPT_COMMAND); // we are done handling the interrupt
+    ARCH::terminal_write("Keyboard pressed\n");
+    outb(ARCH::idt::MASTER_PIC_CONTROL_COMMAND_IO_PORT, ARCH::idt::PIC_END_OF_INTERRUPT_COMMAND); // we are done handling the interrupt
 }
-void no_interrupt_handler() {                                               // for all interrupts not explicitly handled
-    outb(idt::MASTER_PIC_CONTROL_COMMAND_IO_PORT, idt::PIC_END_OF_INTERRUPT_COMMAND); // we are done handling the interrupt (End of Interrupt)
+void no_interrupt_handler() {                                                                     // for all interrupts not explicitly handled
+    outb(ARCH::idt::MASTER_PIC_CONTROL_COMMAND_IO_PORT, ARCH::idt::PIC_END_OF_INTERRUPT_COMMAND); // we are done handling the interrupt (End of Interrupt)
+}
 }
 
-}
-
-namespace arch {
-namespace i386 {
-namespace idt {
+namespace arch::i386::idt {
 
 void idt_zero() {
     terminal_write("DIVIDE BY 0 ERROR\n");
@@ -82,6 +75,4 @@ void idt_init() {
     idt_load(&idtr_desc);
 }
 
-} // namespace idt
-} // namespace i386
-} // namespace arch
+} // namespace arch::i386::idt

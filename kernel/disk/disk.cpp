@@ -1,28 +1,25 @@
 
 #include "disk.h"
-#include "drivers/ata/ata.h"
 
-#include "fs/file.h"
-
-#include "status.h"
-#include "config.h"
-
-#include "libc/string.h"
 #include "arch/i386/io/io.h"
+#include "config.h"
+#include "drivers/ata/ata.h"
+#include "fs/file.h"
+#include "libc/string.h"
+#include "status.h"
 
 namespace disk {
 
 namespace {
 disk primary_disk;
-}  // anonymous namespace
-
+} // anonymous namespace
 
 void search_and_initialize() {
     memset(&primary_disk, 0, sizeof(primary_disk));
-    primary_disk.type = REAL_PHYSICAL;
+    primary_disk.type        = REAL_PHYSICAL;
     primary_disk.sector_size = DISK_BLOCK_SIZE;
-    primary_disk.id = 0;
-    primary_disk.fs = fs::resolve(&primary_disk);
+    primary_disk.id          = 0;
+    primary_disk.fs          = fs::resolve(&primary_disk);
 }
 
 disk* get(int index) {
@@ -39,4 +36,4 @@ int read_block(disk* disk, int lba, int total, void* buf) {
     return ata::read_sector(lba, total, buf);
 }
 
-}  // namespace disk
+} // namespace disk

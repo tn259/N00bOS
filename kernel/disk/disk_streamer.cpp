@@ -1,12 +1,10 @@
 #include "disk_streamer.h"
-#include "disk.h"
-
-#include "mm/heap/kheap.h"
 
 #include "config.h"
+#include "disk.h"
+#include "mm/heap/kheap.h"
 
-namespace disk {
-namespace streamer {
+namespace disk::streamer {
 
 disk_stream* new_stream(int disk_id) {
     auto* disk = get(disk_id);
@@ -15,8 +13,8 @@ disk_stream* new_stream(int disk_id) {
     }
 
     auto* stream = static_cast<disk_stream*>(mm::heap::kzalloc(sizeof(disk_stream)));
-    stream->pos = 0;
-    stream->d = disk;
+    stream->pos  = 0;
+    stream->d    = disk;
 
     return stream;
 }
@@ -33,14 +31,14 @@ int seek(disk_stream* stream, int pos) {
  */
 int read(disk_stream* stream, void* out, int total) {
     auto sector_size = stream->d->sector_size;
-    auto* buf = static_cast<char*>(mm::heap::kzalloc(sector_size));
-    int bytes_read = 0;
+    auto* buf        = static_cast<char*>(mm::heap::kzalloc(sector_size));
+    int bytes_read   = 0;
     int sectors_read = 0;
-    auto* out_char = static_cast<char*>(out);
+    auto* out_char   = static_cast<char*>(out);
     while (bytes_read < total) {
         auto sector = (stream->pos + bytes_read) / sector_size;
         auto offset = (stream->pos + bytes_read) % sector_size;
-        auto res = read_block(stream->d, sector, 1, buf);
+        auto res    = read_block(stream->d, sector, 1, buf);
         if (res < 0) {
             return res;
         }
@@ -53,10 +51,10 @@ int read(disk_stream* stream, void* out, int total) {
         }
         // read up to the sector boundary or the remainder to total
         auto remainder_to_next_sector = sector_size - offset;
-        auto remainder = total - bytes_read;
-        auto bytes_to_read = (remainder > remainder_to_next_sector) ? remainder_to_next_sector : remainder;
+        auto remainder                = total - bytes_read;
+        auto bytes_to_read            = (remainder > remainder_to_next_sector) ? remainder_to_next_sector : remainder;
         for (int idx = 0; idx < bytes_to_read; ++idx) {
-            *out_char++ = buf[offset+idx];
+            *out_char++ = buf[offset + idx];
             ++bytes_read;
         }
         ++sectors_read;
@@ -70,5 +68,4 @@ void close(disk_stream* stream) {
     mm::heap::kfree(stream);
 }
 
-} // namespace streamer
-} // namespace disk
+} // namespace disk::streamer

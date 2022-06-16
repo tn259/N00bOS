@@ -5,8 +5,7 @@
 
 #include "heap.h"
 
-namespace mm {
-namespace heap {
+namespace mm::heap {
 
 /**
  * @brief Is this address aligned to a heap block boundary?
@@ -52,5 +51,4 @@ size_t block_address_2_block_idx(heap* heap, void* addr);
  */
 uint8_t get_entry_type(HEAP_BLOCK_TABLE_ENTRY entry);
 
-}  // namespace heap
-}  // namespace mm
+} // namespace mm::heap

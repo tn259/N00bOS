@@ -1,10 +1,9 @@
 #include "path_parser.h"
 
-#include "mm/heap/kheap.h"
-
 #include "libc/ctype.h"
-#include "libc/string.h"
 #include "libc/stdlib.h"
+#include "libc/string.h"
+#include "mm/heap/kheap.h"
 
 namespace fs {
 
@@ -20,9 +19,9 @@ namespace {
 bool validate_path(const char* path) {
     if (strlen(path) >= 3) {
         char drive_num = path[0];
-        char colon = path[1];
-        char slash = path[2];
-        return (isdigit(drive_num) == 0 && colon == ':' && slash == '/');
+        char colon     = path[1];
+        char slash     = path[2];
+        return (isdigit(drive_num) != 0 && colon == ':' && slash == '/');
     }
     return false;
 }
@@ -35,8 +34,8 @@ bool validate_path(const char* path) {
  */
 int get_drive(const char* path) {
     auto* drive_str = static_cast<char*>(mm::heap::kzalloc(2));
-    drive_str[0] = path[0];
-    auto drive = atoi(drive_str);
+    drive_str[0]    = path[0];
+    auto drive      = atoi(drive_str); // NOLINT(cert-err34-c)
     mm::heap::kfree(drive_str);
     return drive;
 }
@@ -48,9 +47,9 @@ int get_drive(const char* path) {
  * @return path_root* 
  */
 path_root* create_root(int drive_number) {
-    auto* root = static_cast<path_root*>(mm::heap::kzalloc(sizeof(path_root)));
+    auto* root         = static_cast<path_root*>(mm::heap::kzalloc(sizeof(path_root)));
     root->drive_number = drive_number;
-    root->path = nullptr;
+    root->path         = nullptr;
     return root;
 }
 
@@ -62,9 +61,9 @@ path_root* create_root(int drive_number) {
  */
 char* get_path_part_str(const char** path) {
     // find the path part length
-    const char* path_ptr = *path;
+    const char* path_ptr  = *path;
     const auto** tmp_path = path;
-    int idx = 0;
+    int idx               = 0;
     while (**tmp_path != '/' && **tmp_path != '\0') {
         *tmp_path += 1;
         ++idx;
@@ -73,8 +72,8 @@ char* get_path_part_str(const char** path) {
         return nullptr;
     }
     // allocate string and set
-    auto* path_part_str = static_cast<char*>(mm::heap::kzalloc(idx+1)); // +1 for the null terminator
-    idx = 0;
+    auto* path_part_str = static_cast<char*>(mm::heap::kzalloc(idx + 1)); // +1 for the null terminator
+    idx                 = 0;
     while (*path_ptr != '\0' && *path_ptr != '/') {
         path_part_str[idx] = *path_ptr;
         ++idx;
@@ -98,9 +97,9 @@ char* get_path_part_str(const char** path) {
 path_part* parse_path_part(path_part* previous_part, const char** path) {
     auto* path_part_str = get_path_part_str(path);
     // allocate new path part
-    auto* current_part = static_cast<path_part*>(mm::heap::kzalloc(sizeof(path_part)));
+    auto* current_part      = static_cast<path_part*>(mm::heap::kzalloc(sizeof(path_part)));
     current_part->part_name = path_part_str;
-    current_part->next = nullptr;
+    current_part->next      = nullptr;
     // set prev next to current
     if (previous_part != nullptr) {
         previous_part->next = current_part;
@@ -108,10 +107,14 @@ path_part* parse_path_part(path_part* previous_part, const char** path) {
     return current_part;
 }
 
-}  // namespace anonymous
+} // namespace
 
 path_root* parse(const char* path) {
     if (strlen(path) > MAX_PATH_LENGTH) {
+        return nullptr;
+    }
+
+    if (!validate_path(path)) {
         return nullptr;
     }
 
@@ -125,8 +128,8 @@ path_root* parse(const char* path) {
     path += 3; // e.g. skip over '0:/'
 
     const auto* tmp_path = path;
-    path_part* part = parse_path_part(nullptr, &tmp_path);
-    root->path = part; // set first part
+    path_part* part      = parse_path_part(nullptr, &tmp_path);
+    root->path           = part; // set first part
     while (*tmp_path != '\0') {
         part = parse_path_part(part, &tmp_path);
     }
@@ -144,4 +147,4 @@ void free(path_root* root) {
     mm::heap::kfree(root);
 }
 
-}  // namespace fs
+} // namespace fs

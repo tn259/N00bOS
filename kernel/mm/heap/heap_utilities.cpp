@@ -2,8 +2,7 @@
 
 #include "config.h"
 
-namespace mm {
-namespace heap {
+namespace mm::heap {
 
 bool validate_alignment(void* addr) {
     return (reinterpret_cast<size_t>(addr) % HEAP_BLOCK_SIZE) == 0;
@@ -29,5 +28,4 @@ uint8_t get_entry_type(HEAP_BLOCK_TABLE_ENTRY entry) {
     return (entry & 0x0f); // NOLINT(readability-magic-numbers,cppcoreguidelines-avoid-magic-numbers)
 }
 
-} // namespace heap
-} // namespace mm
+} // namespace mm::heap

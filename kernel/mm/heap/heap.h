@@ -24,8 +24,7 @@
  * - Find first fit
  */
 
-namespace mm {
-namespace heap {
+namespace mm::heap {
 
 static const constexpr uint8_t HEAP_BLOCK_TABLE_ENTRY_TAKEN = 0x01;
 static const constexpr uint8_t HEAP_BLOCK_TABLE_ENTRY_FREE  = 0x00;
@@ -55,5 +54,4 @@ struct heap_strategy {
 
 int default_heap_create(heap* heap_ptr, void* start_ptr, void* end_ptr, heap_table* table);
 
-}  // namespace heap
-}  // namespace mm
+} // namespace mm::heap

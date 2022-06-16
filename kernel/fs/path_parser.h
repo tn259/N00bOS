@@ -37,4 +37,4 @@ path_root* parse(const char* path);
  */
 void free(path_root* root);
 
-}  // namespace fs
+} // namespace fs

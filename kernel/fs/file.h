@@ -1,10 +1,11 @@
 #pragma once
 
+#include "config.h"
 #include "path_parser.h"
 
 namespace disk {
 class disk;
-}
+} // namespace disk
 
 namespace fs {
 
@@ -32,7 +33,7 @@ struct filesystem {
     fs_open_function open;
     fs_resolve_function resolve;
 
-    char name[20];
+    char name[FS_MAX_PATH_SIZE];
 };
 
 struct file_descriptor {
@@ -48,4 +49,4 @@ int fopen(const char* filename, const char* mode);
 void insert_filesystem(filesystem* fs);
 filesystem* resolve(disk::disk* disk);
 
-}  // namespace fs
+} // namespace fs

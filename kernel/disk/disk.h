@@ -2,7 +2,7 @@
 
 namespace fs {
 class filesystem;
-}  // namespace fs
+} // namespace fs
 
 namespace disk {
 

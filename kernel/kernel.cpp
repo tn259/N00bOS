@@ -1,17 +1,16 @@
 #include "kernel.h"
 
-#include "arch/i386/tty.h"
 #include "arch/i386/idt/idt.h"
 #include "arch/i386/io/io.h"
 #include "arch/i386/paging/paging.h"
-#include "drivers/ata/ata.h"
+#include "arch/i386/tty.h"
 #include "disk/disk.h"
 #include "disk/disk_streamer.h"
+#include "drivers/ata/ata.h"
 #include "fs/file.h"
-#include "mm/heap/kheap.h"
-#include "fs/path_parser.h" 
-
+#include "fs/path_parser.h"
 #include "libc/stdlib.h"
+#include "mm/heap/kheap.h"
 
 extern "C" void div_zero();
 
@@ -32,7 +31,7 @@ void kernel_main() {
 
     fs::init();
 
-    kernel_paging_chunk = ARCH::paging::paging_new(PAGING_IS_WRITABLE | PAGING_IS_PRESENT | PAGING_ACCESS_FROM_ALL);
+    kernel_paging_chunk = ARCH::paging::paging_new(ARCH::paging::PAGING_IS_WRITABLE | ARCH::paging::PAGING_IS_PRESENT | ARCH::paging::PAGING_ACCESS_FROM_ALL);
     ARCH::paging::paging_switch(kernel_paging_chunk);
     //auto* ptr = (char*)kzalloc(4096);                                                                                                                     // NOLINT
     //paging_set(kernel_paging_chunk->directory_entry, (void*)0x1000, (PAGING_ENTRY)ptr | PAGING_ACCESS_FROM_ALL | PAGING_IS_PRESENT | PAGING_IS_WRITABLE); // NOLINT
@@ -43,8 +42,8 @@ void kernel_main() {
     disk::streamer::disk_stream* ds = disk::streamer::new_stream(0);
 
     char buf[514];
-    disk::streamer::seek(ds, 0x1ff); // 500
-    disk::streamer::read(ds, buf, 514); // 550
+    disk::streamer::seek(ds, 0x1ff);                        // 500
+    disk::streamer::read(ds, static_cast<void*>(buf), 514); // 550
 
     auto fd = fs::fopen("0:/my_file.txt", "r");
     if (fd >= 0) {

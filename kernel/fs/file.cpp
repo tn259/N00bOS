@@ -1,18 +1,14 @@
 #include "file.h"
-#include "path_parser.h"
-
-#include "fat/fat16.h"
-#include "disk/disk.h"
-
-#include "libc/string.h"
-#include "config.h"
-#include "status.h"
-
-#include "mm/heap/kheap.h"
 
 #include "arch/i386/tty.h"
-
+#include "config.h"
+#include "disk/disk.h"
+#include "fat/fat16.h"
 #include "kernel.h"
+#include "libc/string.h"
+#include "mm/heap/kheap.h"
+#include "path_parser.h"
+#include "status.h"
 
 namespace fs {
 
@@ -25,7 +21,7 @@ file_descriptor* file_descriptors[FS_MAX_FILE_DESCRIPTORS];
  * @brief Loads OS supported filesystems into the filesystems table 
  */
 void load() {
-    memset(filesystems, 0, sizeof(filesystems));
+    memset(static_cast<void*>(filesystems), 0, sizeof(filesystems));
     insert_filesystem(fat::fat16_init());
 }
 
@@ -49,7 +45,7 @@ filesystem** get_free_filesystem() {
  * @param fd 
  * @return file_descriptor* 
  */
-file_descriptor* get_file_descriptor(int fd) {
+file_descriptor* get_file_descriptor(int fd) { // NOLINT(clang-diagnostic-unused-function)
     if (fd < 0 || fd >= FS_MAX_FILE_DESCRIPTORS) {
         return nullptr;
     }
@@ -65,10 +61,10 @@ file_descriptor* get_file_descriptor(int fd) {
 int new_file_descriptor(file_descriptor** out_file_descriptor) {
     for (int idx = 0; idx < FS_MAX_FILE_DESCRIPTORS; ++idx) {
         if (file_descriptors[idx] == nullptr) {
-            auto* descriptor = static_cast<file_descriptor*>(mm::heap::kzalloc(sizeof(file_descriptor)));
-            descriptor->index = idx;
+            auto* descriptor      = static_cast<file_descriptor*>(mm::heap::kzalloc(sizeof(file_descriptor)));
+            descriptor->index     = idx;
             file_descriptors[idx] = descriptor;
-            *out_file_descriptor = descriptor;
+            *out_file_descriptor  = descriptor;
             return 0;
         }
     }
@@ -94,10 +90,10 @@ FILE_MODE str_2_filemode(const char* str) {
     return FILE_MODE_INVALID;
 }
 
-}  // anonymous namespace
+} // anonymous namespace
 
 void init() {
-    memset(file_descriptors, 0, sizeof(file_descriptor));
+    memset(static_cast<void*>(file_descriptors), 0, sizeof(file_descriptor));
     load();
 }
 
@@ -132,36 +128,37 @@ int fopen(const char* filename, const char* mode) {
     }
     // setup filedescriptor for the file
     file_descriptor* descriptor = nullptr;
-    int result = 0;
+    int result                  = 0;
     if ((result = new_file_descriptor(&descriptor)) < 0) {
         return result;
     }
-    descriptor->d = disk;
-    descriptor->fs = disk->fs;
+    descriptor->d            = disk;
+    descriptor->fs           = disk->fs;
     descriptor->private_data = descriptor_private_data;
     return descriptor->index;
 }
 
 void insert_filesystem(filesystem* fs) {
-    filesystem** fs_ptr;
-    fs_ptr = get_free_filesystem();
+    filesystem** fs_ptr = nullptr;
+    fs_ptr              = get_free_filesystem();
     if (fs_ptr == nullptr) {
         arch::i386::terminal_write("Error: insert_filesystem\n");
-        while (1) {}
+        while (true) {
+        }
     }
-    arch::i386::terminal_write(fs->name);
+    arch::i386::terminal_write(static_cast<char*>(fs->name));
     *fs_ptr = fs;
 }
 
 filesystem* resolve(disk::disk* d) {
-    filesystem* fs;
+    filesystem* fs = nullptr;
     for (auto& filesystem : filesystems) {
         if (filesystem != nullptr && filesystem->resolve(d) == 0) {
-           fs = filesystem;
-           break; 
+            fs = filesystem;
+            break;
         }
     }
     return fs;
 }
 
-}  // namespace fs
+} // namespace fs

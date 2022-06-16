@@ -1,7 +1,8 @@
 #include "string.h"
-#include "ctype.h"
 
 #include <stddef.h>
+
+#include "ctype.h"
 
 int memcmp(const void* mem1, const void* mem2, size_t n) {
     const auto* ptr1 = static_cast<const unsigned char*>(mem1);
@@ -9,8 +10,7 @@ int memcmp(const void* mem1, const void* mem2, size_t n) {
     for (size_t idx = 0; idx < n; ++idx) {
         if (ptr1[idx] > ptr2[idx]) {
             return 1;
-        }
-        else if (ptr1[idx] < ptr2[idx]) {
+        } else if (ptr1[idx] < ptr2[idx]) { // NOLINT(readability-else-after-return)
             return -1;
         }
     }
@@ -19,7 +19,7 @@ int memcmp(const void* mem1, const void* mem2, size_t n) {
 
 void* memcpy(void* dst, const void* src, size_t n) {
     const auto* src_char = static_cast<const char*>(src);
-    auto* dst_char = static_cast<char*>(dst);
+    auto* dst_char       = static_cast<char*>(dst);
     for (size_t idx = 0; idx < n; ++idx) {
         dst_char[idx] = src_char[idx];
     }
@@ -36,10 +36,10 @@ void* memcpy(void* dst, const void* src, size_t n) {
  */
 void* memmove(void* dst, const void* src, size_t n) {
     const auto* src_char = static_cast<const char*>(src);
-    auto* dst_char = static_cast<char*>(dst);
+    auto* dst_char       = static_cast<char*>(dst);
     if (src_char < dst_char) {
         for (size_t idx = n; idx > 0; --idx) {
-            dst_char[idx-1] = src_char[idx-1];
+            dst_char[idx - 1] = src_char[idx - 1];
         }
     } else {
         for (size_t idx = 0; idx < n; ++idx) {
@@ -59,7 +59,9 @@ void* memset(void* mem, int value, size_t n) {
 
 size_t strlen(const char* str) {
     size_t idx = 0;
-    while (str[idx] != '\0') { ++idx; }
+    while (str[idx] != '\0') {
+        ++idx;
+    }
     return idx;
 }
 
@@ -98,7 +100,7 @@ int strncmp(const char* str1, const char* str2, int n) {
 }
 
 int strcasecmp(const char* str1, const char* str2) {
-    int idx = 0;
+    int idx    = 0;
     int result = 0;
     while (true) {
         bool end_str1 = str1[idx] == '\0';

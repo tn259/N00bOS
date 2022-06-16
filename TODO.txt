@@ -1,0 +1,16 @@
+-Finish Udemy course with basic kernel working
+-Kernel labs course to understand more before going on
+-Confirm coding standards, fix CI, write README
+-Basic shell, some userspace programs that demonstrate feature set in rust
+-Write python based autotests
+-Make ABI compatible with C++
+-Support x86_64
+-Support ARM 32 qemu
+-Support ARM 64 qemu
+-Support ARM raspberry pi
+-Support C++ OO
+?Write in Rust
+-Support a modern FS
+-Better paging/caching support
+-Something like CFS
+-Write a networking stack - Eth, IP, UDP, ICMP, TCP

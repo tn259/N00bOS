@@ -3,8 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace mm {
-namespace heap {
+namespace mm::heap {
 
 /**
  * @brief Initialises the kernel heap 
@@ -31,5 +30,4 @@ void* kzalloc(size_t size);
  */
 void kfree(void* ptr);
 
-}  // namespace heap
-}  // namespace mm
+} // namespace mm::heap

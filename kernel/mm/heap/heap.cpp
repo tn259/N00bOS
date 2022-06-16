@@ -5,8 +5,7 @@
 #include "libc/string.h"
 #include "status.h"
 
-namespace mm {
-namespace heap {
+namespace mm::heap {
 
 namespace {
 
@@ -46,5 +45,4 @@ int default_heap_create(heap* heap, void* start_ptr, void* end_ptr, heap_table* 
     return 0;
 }
 
-} // namespace heap
-} // namespace mm
+} // namespace mm::heap

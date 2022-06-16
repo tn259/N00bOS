@@ -6,8 +6,7 @@
 #include "libc/string.h"
 #include "status.h"
 
-namespace mm {
-namespace heap {
+namespace mm::heap {
 
 namespace {
 heap kernel_heap;
@@ -48,5 +47,4 @@ void kfree(void* ptr) {
     strategy.free(&kernel_heap, ptr);
 }
 
-} // namespace heap
-} // namespace mm
+} // namespace mm::heap

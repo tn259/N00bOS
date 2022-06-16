@@ -3,8 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace mm {
-namespace heap {
+namespace mm::heap {
 
 class heap_strategy;
 class heap;
@@ -34,5 +33,4 @@ void* heap_malloc(heap* heap_ptr, size_t block_size);
 void heap_free(heap* heap, void* addr);
 
 } // namespace find_first_fit
-}  // namespace heap
-}  // namespace mm
+} // namespace mm::heap

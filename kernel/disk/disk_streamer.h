@@ -6,8 +6,7 @@ struct disk;
 
 namespace streamer {
 
-struct disk_stream
-{
+struct disk_stream {
     int pos;
     disk* d;
 };

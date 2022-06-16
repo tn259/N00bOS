@@ -73,7 +73,6 @@ char* strcpy(char* dst, const char* src);
  */
 int strncmp(const char* str1, const char* str2, int n);
 
-
 /**
  * @brief compare two null-terminated strings case insensitively
  * 

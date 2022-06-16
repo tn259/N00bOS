@@ -1,1 +1,16 @@
-Checks:         '*,-*-deprecated-headers,-llvm-header-guard,-*-avoid-c-arrays,-*-pointer-arithmetic,-*-reinterpret-cast,-*-trailing-return-type,-hicpp-signed-bitwise,-*-implicit-bool-conversion,-*-simplify-boolean-expr'
+---
+Checks: >
+    *,
+    -*-deprecated-headers,
+    -llvm-header-guard,
+    -*-avoid-c-arrays,
+    -*-pointer-arithmetic,
+    -*-reinterpret-cast,
+    -*-trailing-return-type,
+    -hicpp-signed-bitwise,
+    -*-implicit-bool-conversion,
+    -*-simplify-boolean-expr,
+    -*-magic-numbers,
+    -cppcoreguidelines-pro-type-union-access,
+    -*-avoid-goto,
+    -cppcoreguidelines-pro-bounds-constant-array-index

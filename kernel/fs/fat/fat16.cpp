@@ -1,44 +1,37 @@
 #include "fat16.h"
-#include "file.h"
-
-#include "disk/disk.h"
-#include "disk/disk_streamer.h"
-
-#include "mm/heap/kheap.h"
-
-#include "libc/string.h"
-#include "libc/stdlib.h"
-
-#include "arch/i386/tty.h"
-
-#include "status.h"
-#include "config.h"
-
-#include "kernel.h"
 
 #include <stdint.h>
 
-namespace ARCH = arch::i386;
+#include "arch/i386/tty.h"
+#include "config.h"
+#include "disk/disk.h"
+#include "disk/disk_streamer.h"
+#include "file.h"
+#include "kernel.h"
+#include "libc/stdlib.h"
+#include "libc/string.h"
+#include "mm/heap/kheap.h"
+#include "status.h"
+
 // https://www.cs.fsu.edu/~cop4610t/assignments/project3/spec/fatspec.pdf
 
-namespace fs {
-namespace fat {
+namespace fs::fat {
 
 void* fat16_open(disk::disk* d, path_part* path, FILE_MODE mode);
 int fat16_resolve(disk::disk* d);
 
 namespace {
 
-const constexpr uint8_t FAT16_SIGNATURE = 0x29;
+const constexpr uint8_t FAT16_SIGNATURE      = 0x29;
 const constexpr uint8_t FAT16_FAT_ENTRY_SIZE = 0x02;
 
 // https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system
-const constexpr uint16_t FAT16_FAT_RESERVED_CLUSTER_START = 0xFFF0;
-const constexpr uint16_t FAT16_FAT_RESERVED_CLUSTER_END = 0xFFF6;
-const constexpr uint16_t FAT16_FAT_BAD_SECTOR = 0xFFF7;
+const constexpr uint16_t FAT16_FAT_RESERVED_CLUSTER_START     = 0xFFF0;
+const constexpr uint16_t FAT16_FAT_RESERVED_CLUSTER_END       = 0xFFF6;
+const constexpr uint16_t FAT16_FAT_BAD_SECTOR                 = 0xFFF7;
 const constexpr uint16_t FAT16_FAT_LAST_CLUSTER_IN_FILE_START = 0xFFF8;
-const constexpr uint16_t FAT16_FAT_LAST_CLUSTER_IN_FILE_END = 0xFFFF;
-const constexpr uint8_t FAT16_UNUSED = 0x00;
+const constexpr uint16_t FAT16_FAT_LAST_CLUSTER_IN_FILE_END   = 0xFFFF;
+const constexpr uint8_t FAT16_UNUSED                          = 0x00;
 
 enum fat_item_type {
     FAT_ITEM_TYPE_DIRECTORY = 0,
@@ -46,14 +39,14 @@ enum fat_item_type {
 };
 
 // FAT directory bitmask attributes
-const constexpr uint8_t FAT_FILE_READ_ONLY = 0x01;
-const constexpr uint8_t FAT_FILE_HIDDEN = 0x02;
-const constexpr uint8_t FAT_FILE_SYSTEM = 0x04;
-const constexpr uint8_t FAT_FILE_VOLUME_LABEL = 0x08;
+const constexpr uint8_t FAT_FILE_READ_ONLY    = 0x01; // NOLINT(clang-diagnostic-unused-const-variable)
+const constexpr uint8_t FAT_FILE_HIDDEN       = 0x02; // NOLINT(clang-diagnostic-unused-const-variable)
+const constexpr uint8_t FAT_FILE_SYSTEM       = 0x04; // NOLINT(clang-diagnostic-unused-const-variable)
+const constexpr uint8_t FAT_FILE_VOLUME_LABEL = 0x08; // NOLINT(clang-diagnostic-unused-const-variable)
 const constexpr uint8_t FAT_FILE_SUBDIRECTORY = 0x10;
-const constexpr uint8_t FAT_FILE_ARCHIVED = 0x20;
-const constexpr uint8_t FAT_FILE_DEVICE = 0x40;
-const constexpr uint8_t FAT_FILE_RESERVED = 0x80;
+const constexpr uint8_t FAT_FILE_ARCHIVED     = 0x20; // NOLINT(clang-diagnostic-unused-const-variable)
+const constexpr uint8_t FAT_FILE_DEVICE       = 0x40; // NOLINT(clang-diagnostic-unused-const-variable)
+const constexpr uint8_t FAT_FILE_RESERVED     = 0x80; // NOLINT(clang-diagnostic-unused-const-variable)
 
 struct fat_header_extened {
     uint8_t drive_number;
@@ -89,6 +82,9 @@ struct fat_h {
     } shared;
 };
 
+/**
+ * @brief Any such fat item that can exist in a fat directory 
+ */
 struct fat_directory_item {
     uint8_t filename[8];
     uint8_t ext[3];
@@ -131,16 +127,15 @@ struct fat_private {
 
     // streams the data
     disk::streamer::disk_stream* cluster_read_stream;
-    // streams the FAT table itself 
+    // streams the FAT table itself
     disk::streamer::disk_stream* fat_read_stream;
     // streams the root directory region
     disk::streamer::disk_stream* directory_read_stream;
 };
 
 filesystem fat16_fs = {
-    .open = fat16_open,
-    .resolve = fat16_resolve
-};
+    .open    = fat16_open,
+    .resolve = fat16_resolve};
 
 /**
  * @brief Initialises a fat_private instance
@@ -149,9 +144,9 @@ filesystem fat16_fs = {
  * @param private_data - the private data to be initialized
  */
 void init_fat_private(disk::disk* d, fat_private* private_data) {
-    memset(private_data, 0, sizeof(private_data));
-    private_data->cluster_read_stream = disk::streamer::new_stream(d->id);
-    private_data->fat_read_stream = disk::streamer::new_stream(d->id);
+    memset(private_data, 0, sizeof(private_data)); // NOLINT(bugprone-sizeof-expression)
+    private_data->cluster_read_stream   = disk::streamer::new_stream(d->id);
+    private_data->fat_read_stream       = disk::streamer::new_stream(d->id);
     private_data->directory_read_stream = disk::streamer::new_stream(d->id);
 }
 
@@ -194,14 +189,14 @@ fat_directory_item* clone_directory_item(fat_directory_item* directory_item, siz
  * 
  * @return int - >= 0 on success
  */
-int get_directory_total_items(disk::disk* d, uint32_t directory_start_sector, fat_directory* directory=nullptr) {
+int get_directory_total_items(disk::disk* d, uint32_t directory_start_sector, fat_directory* directory) {
     int result = 0;
 
     auto* private_data = static_cast<fat_private*>(d->fs_private_data);
 
     // seek to the start of the directory
     auto directory_start_pos = directory_start_sector * d->sector_size;
-    auto* directory_stream = private_data->directory_read_stream;
+    auto* directory_stream   = private_data->directory_read_stream;
     if ((result = disk::streamer::seek(directory_stream, directory_start_pos)) != 0) {
         return result;
     }
@@ -209,7 +204,7 @@ int get_directory_total_items(disk::disk* d, uint32_t directory_start_sector, fa
     // Loop through the directory items until we find the first one that is not populated.
     // This delimits where the directory items end.
     int num_items = 0;
-    fat_directory_item item;
+    fat_directory_item item; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     while (true) {
         if ((result = disk::streamer::read(directory_stream, &item, sizeof(fat_directory_item))) != 0) {
             return result;
@@ -233,22 +228,22 @@ int get_directory_total_items(disk::disk* d, uint32_t directory_start_sector, fa
 
 int get_fat_entry(disk::disk* d, int cluster) {
     auto* private_data = static_cast<fat_private*>(d->fs_private_data);
-    auto* fat_stream = private_data->fat_read_stream;
+    auto* fat_stream   = private_data->fat_read_stream;
     if (fat_stream == nullptr) {
         return -1;
     }
 
     // first FAT sector starts after the reserved sectors
     auto first_fat_sector = private_data->header.primary_header.reserved_sectors;
-    auto fat_table_pos = first_fat_sector * d->sector_size;
-    int res = -1;
-    res = disk::streamer::seek(fat_stream, fat_table_pos + (cluster * FAT16_FAT_ENTRY_SIZE));
+    auto fat_table_pos    = first_fat_sector * d->sector_size;
+    int res               = -1;
+    res                   = disk::streamer::seek(fat_stream, fat_table_pos + (cluster * FAT16_FAT_ENTRY_SIZE));
     if (res < 0) {
         return res;
     }
     // fat entry size is 2 bytes
     uint16_t fat_entry = 0;
-    res = disk::streamer::read(fat_stream, &fat_entry, sizeof(fat_entry));
+    res                = disk::streamer::read(fat_stream, &fat_entry, sizeof(fat_entry));
     if (res < 0) {
         return res;
     }
@@ -263,7 +258,7 @@ int get_fat_entry(disk::disk* d, int cluster) {
  * @return uint32_t - the first cluster index
  */
 uint32_t get_first_cluster(fat_directory_item* directory_item) {
-    //return (directory_item->hi_16bits_first_cluster << 16) | directory_item->lo_16bits_first_cluster;
+    // TODO (tn259) return (directory_item->hi_16bits_first_cluster << 16) | directory_item->lo_16bits_first_cluster;
     return directory_item->hi_16bits_first_cluster | directory_item->lo_16bits_first_cluster;
 }
 
@@ -276,10 +271,10 @@ uint32_t get_first_cluster(fat_directory_item* directory_item) {
  * @return int - the cluster
  */
 int get_cluster(disk::disk* d, int starting_cluster, int offset) {
-    auto* private_data = static_cast<fat_private*>(d->fs_private_data);
+    auto* private_data      = static_cast<fat_private*>(d->fs_private_data);
     auto cluster_size_bytes = private_data->header.primary_header.sectors_per_cluster * d->sector_size;
-    auto cluster = starting_cluster;
-    auto cluster_offset = offset / cluster_size_bytes;
+    auto cluster            = starting_cluster;
+    auto cluster_offset     = offset / cluster_size_bytes;
     for (int idx = 0; idx < cluster_offset; ++idx) {
         // TODO(tn259) Find the first cluster that is not used?
         auto fat_entry = get_fat_entry(d, cluster);
@@ -310,8 +305,7 @@ int get_cluster(disk::disk* d, int starting_cluster, int offset) {
  * @param cluster - the cluster index
  * @return int - the sector index
  */
-int cluster_to_sector(fat_private* private_data, int cluster)
-{
+int cluster_to_sector(fat_private* private_data, int cluster) {
     // TODO(tn259) why is it cluster - 2?
     return private_data->root_directory.sector_pos_end + ((cluster - 2) * private_data->header.primary_header.sectors_per_cluster);
 }
@@ -328,11 +322,11 @@ int cluster_to_sector(fat_private* private_data, int cluster)
  * @return int - == 0 on success
  */
 int read_internal_from_stream(disk::disk* d, disk::streamer::disk_stream* stream, int starting_cluster, int offset, int total_bytes, void* output) {
-    auto* private_data = static_cast<fat_private*>(d->fs_private_data);
+    auto* private_data      = static_cast<fat_private*>(d->fs_private_data);
     auto cluster_size_bytes = private_data->header.primary_header.sectors_per_cluster * d->sector_size;
 
     int bytes_read = 0;
-    int res = 0;
+    int res        = 0;
     while (bytes_read < total_bytes) {
         auto cluster = get_cluster(d, starting_cluster, offset);
         if (cluster < 0) {
@@ -341,10 +335,10 @@ int read_internal_from_stream(disk::disk* d, disk::streamer::disk_stream* stream
         auto offset_from_cluster = offset % cluster_size_bytes;
 
         auto starting_sector = cluster_to_sector(private_data, cluster);
-        auto starting_pos = (starting_sector * d->sector_size) + offset_from_cluster;
+        auto starting_pos    = (starting_sector * d->sector_size) + offset_from_cluster;
 
         auto bytes_remaining = total_bytes - bytes_read;
-        auto total_to_read = bytes_remaining > cluster_size_bytes ? cluster_size_bytes : bytes_remaining;
+        auto total_to_read   = bytes_remaining > cluster_size_bytes ? cluster_size_bytes : bytes_remaining;
         if ((res = disk::streamer::seek(stream, starting_pos)) < 0) {
             return res;
         }
@@ -367,7 +361,7 @@ int read_internal_from_stream(disk::disk* d, disk::streamer::disk_stream* stream
  * @return int - == 0 on success
  */
 int read_internal(disk::disk* d, int starting_cluster, int offset, int total_bytes, void* output) {
-    auto* private_data = static_cast<fat_private*>(d->fs_private_data);
+    auto* private_data   = static_cast<fat_private*>(d->fs_private_data);
     auto* cluster_stream = private_data->cluster_read_stream;
     return read_internal_from_stream(d, cluster_stream, starting_cluster, offset, total_bytes, output);
 }
@@ -381,7 +375,7 @@ void directory_free(fat_directory* directory) {
     if (directory != nullptr) {
         for (int idx = 0; idx < directory->total; ++idx) {
             if (&directory->item[idx] != nullptr) {
-                mm::heap::kfree(&directory->item[idx]);
+                mm::heap::kfree(&directory->item[idx]); // NOLINT(clang-analyzer-unix.Malloc)
             }
         }
         mm::heap::kfree(directory);
@@ -419,17 +413,18 @@ fat_directory* load_directory(disk::disk* d, fat_directory_item* directory_item)
         return nullptr;
     }
     auto* private_data = static_cast<fat_private*>(d->fs_private_data);
-    auto* directory = static_cast<fat_directory*>(mm::heap::kzalloc(sizeof(fat_directory)));
+    auto* directory    = static_cast<fat_directory*>(mm::heap::kzalloc(sizeof(fat_directory)));
     if (directory == nullptr) {
         return nullptr;
     }
-    
+
     auto cluster = get_first_cluster(directory_item);
-    auto sector = cluster_to_sector(private_data, cluster);
-    auto total_items = get_directory_total_items(d, sector);
-    directory->total = total_items;
+    auto sector  = cluster_to_sector(private_data, cluster);
+    // We are not loading the items in here hence 'nullptr'
+    auto total_items    = get_directory_total_items(d, sector, nullptr);
+    directory->total    = total_items;
     auto directory_size = directory->total * sizeof(fat_directory_item);
-    directory->item = static_cast<fat_directory_item*>(mm::heap::kzalloc(directory_size));
+    directory->item     = static_cast<fat_directory_item*>(mm::heap::kzalloc(directory_size));
     if (directory->item == nullptr) {
         directory_free(directory);
         return nullptr;
@@ -439,7 +434,7 @@ fat_directory* load_directory(disk::disk* d, fat_directory_item* directory_item)
         directory_free(directory);
         return nullptr;
     }
-    return directory; 
+    return directory;
 }
 
 /**
@@ -458,11 +453,11 @@ fat_item* new_item(disk::disk* d, fat_directory_item* directory_item) {
     if (directory_item->attribute & FAT_FILE_SUBDIRECTORY) {
         // this is a directory
         item->directory = load_directory(d, directory_item);
-        item->type = FAT_ITEM_TYPE_DIRECTORY;
+        item->type      = FAT_ITEM_TYPE_DIRECTORY;
         return item;
     }
     // this is a file
-    item->type = FAT_ITEM_TYPE_FILE;
+    item->type           = FAT_ITEM_TYPE_FILE;
     item->directory_item = clone_directory_item(directory_item, sizeof(fat_directory_item));
     return item;
 }
@@ -477,7 +472,8 @@ void get_space_terminated_string(char** out, const char* in, int in_length) {
     int idx = 0;
     while (idx < in_length && in[idx] != 0x00 && in[idx] != 0x20) {
         **out = in[idx];
-        ++idx; ++*out;
+        ++idx;
+        ++*out;
     }
     if (**out == 0x20) {
         // truncate as NULL terminated
@@ -515,8 +511,8 @@ fat_item* find_item_in_directory(disk::disk* d, fat_directory* directory, const 
     fat_item* item = nullptr;
     for (int item_idx = 0; item_idx < directory->total; ++item_idx) {
         char filename[FS_MAX_PATH_SIZE];
-        get_filename(&directory->item[item_idx], filename, sizeof(filename));
-        if (strcasecmp(filename, name) == 0) {
+        get_filename(&directory->item[item_idx], static_cast<char*>(filename), sizeof(filename));
+        if (strcasecmp(static_cast<char*>(filename), name) == 0) {
             item = new_item(d, &directory->item[item_idx]);
             break;
         }
@@ -542,7 +538,7 @@ fat_item* get_item(disk::disk* d, path_part* part) {
     }
 
     auto* current_item = root_item;
-    auto* next_part = part->next;
+    auto* next_part    = part->next;
     while (next_part != nullptr) {
         if (current_item->type != FAT_ITEM_TYPE_DIRECTORY) {
             // e.g. we were searching for c.txt in /a/b/c.txt but a or b turned out not to be directories to traverse
@@ -553,11 +549,11 @@ fat_item* get_item(disk::disk* d, path_part* part) {
         // TODO(tn259) deallocate everything if null?
         item_free(current_item);
         current_item = tmp_item;
-        next_part = next_part->next;
+        next_part    = next_part->next;
     }
     // current item is now a file
     // e.g. c.txt in /a/b/c.txt
-    return current_item; 
+    return current_item;
 }
 
 /**
@@ -573,9 +569,9 @@ int get_root_directory(disk::disk* d, fat_private* private_data, fat_directory* 
     // get the root dir sector idx, in other words which sector is it?
     // directories and files i.e. data starts after the FAT metadata
     auto root_dir_sector_pos = (primary_header->fat_copies * primary_header->sectors_per_fat) + primary_header->reserved_sectors;
-    auto root_dir_entries = primary_header->root_dir_entries;
+    auto root_dir_entries    = primary_header->root_dir_entries;
     // get root dir size and number of sectors based on the number of entries in the root dir
-    auto root_dir_size = root_dir_entries * sizeof(fat_directory_item);
+    auto root_dir_size          = root_dir_entries * sizeof(fat_directory_item);
     auto root_dir_total_sectors = root_dir_size / d->sector_size;
     if (root_dir_size % d->sector_size != 0) { // round up
         ++root_dir_total_sectors;
@@ -587,16 +583,17 @@ int get_root_directory(disk::disk* d, fat_private* private_data, fat_directory* 
     }
 
     // set the sectory offsets
-    directory->total = directory_total_items;
+    directory->total      = directory_total_items;
     directory->sector_pos = root_dir_sector_pos;
-    directory->sector_pos_end = root_dir_sector_pos + (root_dir_size / d->sector_size);
+    // TODO(tn259) - need to sort out integer type usage
+    directory->sector_pos_end = static_cast<int>(root_dir_sector_pos + (root_dir_size / d->sector_size));
     return 0;
 }
 
-}  // namespace anonymous
+} // namespace
 
 filesystem* fat16_init() {
-    strcpy(fat16_fs.name, "FAT16");
+    strcpy(static_cast<char*>(fat16_fs.name), "FAT16"); // NOLINT(clang-analyzer-security.insecureAPI.strcpy)
     return &fat16_fs;
 }
 
@@ -627,7 +624,7 @@ int fat16_resolve(disk::disk* d) {
     init_fat_private(d, private_data);
 
     d->fs_private_data = private_data;
-    d->fs = &fat16_fs;
+    d->fs              = &fat16_fs;
 
     // use a streamer to get FAT metadata and data from the disk and populate the FAT16 structures
     auto* stream = static_cast<disk::streamer::disk_stream*>(disk::streamer::new_stream(d->id));
@@ -659,11 +656,10 @@ out:
     if (result < 0 && private_data != nullptr) {
         close_fat_private(private_data);
         mm::heap::kfree(private_data);
-        d->fs = nullptr;
+        d->fs              = nullptr;
         d->fs_private_data = nullptr;
     }
     return result;
 }
 
-}  // namespace fat
-}  // namespace fs
+} // namespace fs::fat

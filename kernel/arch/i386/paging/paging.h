@@ -49,9 +49,7 @@
  *                                  PTE 2
  * 
  */
-namespace arch {
-namespace i386 {
-namespace paging {
+namespace arch::i386::paging {
 
 using PAGING_ENTRY = uint32_t;
 
@@ -95,12 +93,10 @@ void paging_switch(paging_chunk* chunk);
  */
 int paging_set(const PAGING_ENTRY* directory, void* virtual_address, PAGING_ENTRY value);
 
-} // namespace paging
-} // namespace i386
-} // namespace arch
+} // namespace arch::i386::paging
 
 extern "C" { // ASM functions
-using namespace arch::i386::paging;
+namespace ARCH = arch::i386;
 void enable_paging();
-void paging_load_directory(PAGING_ENTRY* directory);
+void paging_load_directory(ARCH::paging::PAGING_ENTRY* directory);
 }

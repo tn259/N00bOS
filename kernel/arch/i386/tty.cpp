@@ -1,13 +1,12 @@
 #include "tty.h"
-#include "vga.h"
-
-#include "libc/string.h"
 
 #include <stddef.h>
 #include <stdint.h>
 
-namespace arch {
-namespace i386 {
+#include "libc/string.h"
+#include "vga.h"
+
+namespace arch::i386 {
 
 namespace {
 
@@ -73,5 +72,4 @@ void terminal_set_colour(uint8_t colour) {
     terminal_colour = colour;
 }
 
-} // namespace i386
-} // namespace arch
+} // namespace arch::i386

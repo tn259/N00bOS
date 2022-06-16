@@ -2,8 +2,7 @@
 
 #include "config.h"
 
-namespace mm {
-namespace heap {
+namespace mm::heap {
 
 class heap_strategy;
 
@@ -15,7 +14,6 @@ namespace strategy_factory {
  * @param strategy_ptr - the heap implementation 
  */
 void make_strategy(heap_algorithm algorithm, heap_strategy* strategy_ptr);
-}  // namespace strategy_factory
+} // namespace strategy_factory
 
-}  // namespace heap
-}  // namespace mm
+} // namespace mm::heap
