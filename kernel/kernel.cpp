@@ -54,6 +54,16 @@ void kernel_main() {
         ARCH::terminal_write("Content:");
         ARCH::terminal_write(buf);
         ARCH::terminal_write("\n");
+        // fstat
+        fs::file_stat stat;
+        fs::fstat(fd, &stat);
+        char fsizebuf[3];
+        ARCH::terminal_write("Stat: ");
+        ARCH::terminal_write(itoa(static_cast<int>(stat.filesize), fsizebuf, 10));
+        ARCH::terminal_write("\n");
+        char fflagsbuf[3];
+        ARCH::terminal_write(itoa(static_cast<int>(stat.flags), fflagsbuf, 10));
+        ARCH::terminal_write("\n");
     }
     auto fd2 = fs::fopen("0:/my_dir/my_file2.txt", "r");
     if (fd2 >= 0) {

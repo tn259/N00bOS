@@ -160,6 +160,17 @@ int fseek(int fd, int offset, FILE_SEEK_MODE whence) {
     return file_desc->fs->seek(file_desc->private_data, offset, whence);
 }
 
+int fstat(int fd, file_stat* stat) {
+    if (fd < 0) {
+        return -EINVAL;
+    }
+    auto* file_desc = get_file_descriptor(fd);
+    if (file_desc == nullptr) {
+        return -EINVAL;
+    }
+    return file_desc->fs->stat(file_desc->d, file_desc->private_data, stat);
+}
+
 void insert_filesystem(filesystem* fs) {
     filesystem** fs_ptr = nullptr;
     fs_ptr              = get_free_filesystem();

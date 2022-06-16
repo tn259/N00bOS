@@ -24,6 +24,7 @@ namespace fs::fat {
 void* fat16_open(disk::disk* d, path_part* path, FILE_MODE mode);
 int fat16_read(disk::disk* d, void* private_data, size_t block_size, size_t num_blocks, char* output);
 int fat16_seek(void* private_data, int offset, FILE_SEEK_MODE seek_mode);
+int fat16_stat(disk::disk* d, void* private_data, file_stat* stat);
 int fat16_resolve(disk::disk* d);
 
 namespace {
@@ -143,6 +144,7 @@ filesystem fat16_fs = {
     .open    = fat16_open,
     .read    = fat16_read,
     .seek    = fat16_seek,
+    .stat    = fat16_stat,
     .resolve = fat16_resolve};
 
 /**
@@ -664,6 +666,20 @@ int fat16_seek(void* private_data, int offset, FILE_SEEK_MODE seek_mode) {
         default:
             return -EINVAL;
             break;
+    }
+    return 0;
+}
+
+int fat16_stat(disk::disk* d, void* private_data, file_stat* stat) {
+    auto* fat16_desc = static_cast<fat_item_descriptor*>(private_data);
+    if (fat16_desc->item->type != FAT_ITEM_TYPE_FILE) {
+        return -EINVAL;
+    }
+    auto* file_item = fat16_desc->item->directory_item;
+    stat->filesize  = file_item->filesize;
+    // TODO (tn259) support read/write/execute/etc.
+    if (file_item->attribute & FILE_STAT_READ_ONLY) {
+        stat->flags = FILE_STAT_READ_ONLY;
     }
     return 0;
 }
