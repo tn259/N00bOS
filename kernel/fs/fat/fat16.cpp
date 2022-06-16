@@ -15,9 +15,14 @@
 
 // https://www.cs.fsu.edu/~cop4610t/assignments/project3/spec/fatspec.pdf
 
+// http://www.maverick-os.dk/FileSystemFormats/FAT16_FileSystem.html
+
+// http://www.c-jump.com/CIS24/Slides/FAT/FAT.html
+
 namespace fs::fat {
 
 void* fat16_open(disk::disk* d, path_part* path, FILE_MODE mode);
+int fat16_read(disk::disk* d, void* private_data, size_t block_size, size_t num_blocks, char* output);
 int fat16_resolve(disk::disk* d);
 
 namespace {
@@ -135,6 +140,7 @@ struct fat_private {
 
 filesystem fat16_fs = {
     .open    = fat16_open,
+    .read    = fat16_read,
     .resolve = fat16_resolve};
 
 /**
@@ -181,10 +187,10 @@ fat_directory_item* clone_directory_item(fat_directory_item* directory_item, siz
 }
 
 /**
- * @brief Loads the directory items in a directory
+ * @brief Loadsi and counts the directory items in a directory
  * 
  * @param d - disk to read from
- * @param directory_start_sector - start sector position of where the directory is on disk
+ * @param directory_start_sector - start sector index of where the directory is on disk
  * @param directory - populate the items on this directory
  * 
  * @return int - >= 0 on success
@@ -226,6 +232,13 @@ int get_directory_total_items(disk::disk* d, uint32_t directory_start_sector, fa
     return num_items;
 }
 
+/**
+ * @brief Get the fat_entry at cluster index given
+ * 
+ * @param d - the disk 
+ * @param cluster - the cluster index 
+ * @return int - >=0 if a fat_entry was read else <0 on error
+ */
 int get_fat_entry(disk::disk* d, int cluster) {
     auto* private_data = static_cast<fat_private*>(d->fs_private_data);
     auto* fat_stream   = private_data->fat_read_stream;
@@ -268,7 +281,7 @@ uint32_t get_first_cluster(fat_directory_item* directory_item) {
  * @param d - disk
  * @param starting_cluster - cluster to start from 
  * @param offset - byte offset into cluster data section
- * @return int - the cluster
+ * @return int - the cluster if >=0 or an error if <0
  */
 int get_cluster(disk::disk* d, int starting_cluster, int offset) {
     auto* private_data      = static_cast<fat_private*>(d->fs_private_data);
@@ -351,7 +364,7 @@ int read_internal_from_stream(disk::disk* d, disk::streamer::disk_stream* stream
 }
 
 /**
- * @brief Read total_bytes from offset into starting_cluster
+ * @brief Read total_bytes from a bytes offset into starting_cluster
  * 
  * @param d - the disk
  * @param starting_cluster - the starting cluster to read from
@@ -438,7 +451,7 @@ fat_directory* load_directory(disk::disk* d, fat_directory_item* directory_item)
 }
 
 /**
- * @brief Creates a new fat_item from the fat_directory_item
+ * @brief Creates a new fat_item representation from the fat_directory_item
  * 
  * @param d - used to load in subdirectory if directory_item is a directory
  * @param directory_item - the directory_item
@@ -615,6 +628,17 @@ void* fat16_open(disk::disk* d, path_part* path, FILE_MODE mode) {
 
     descriptor->pos = 0;
     return descriptor;
+}
+
+int fat16_read(disk::disk* d, void* private_data, size_t block_size, size_t num_blocks, char* output) {
+    auto* fat16_desc = static_cast<fat_item_descriptor*>(private_data);
+    auto* item       = fat16_desc->item;
+    if (item->type != FAT_ITEM_TYPE_FILE) {
+        // TODO(tn259) Consider trying to read directories later on
+        return -EINVAL;
+    }
+    auto cluster = get_first_cluster(item->directory_item);
+    return read_internal(d, cluster, 0, block_size * num_blocks, static_cast<void*>(output)); // NOLINT(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
 }
 
 int fat16_resolve(disk::disk* d) {

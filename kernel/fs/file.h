@@ -26,11 +26,14 @@ enum file_mode {
 
 // function to open a file
 using fs_open_function = void* (*)(disk::disk* d, path_part* path, FILE_MODE mode);
+// function to read from a file
+using fs_read_function = int (*)(disk::disk* d, void* private_data, size_t block_size, size_t num_blocks, char* output);
 // function to resolve a filesystem that the os supports against a filesystem that the disk supports
 using fs_resolve_function = int (*)(disk::disk* d);
 
 struct filesystem {
     fs_open_function open;
+    fs_read_function read;
     fs_resolve_function resolve;
 
     char name[FS_MAX_PATH_SIZE];
@@ -46,6 +49,7 @@ struct file_descriptor {
 
 void init();
 int fopen(const char* filename, const char* mode);
+int fread(void* data, size_t block_size, size_t num_blocks, int fd);
 void insert_filesystem(filesystem* fs);
 filesystem* resolve(disk::disk* disk);
 

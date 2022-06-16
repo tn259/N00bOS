@@ -48,10 +48,22 @@ void kernel_main() {
     auto fd = fs::fopen("0:/my_file.txt", "r");
     if (fd >= 0) {
         ARCH::terminal_write("We opened a root file!\n");
+        char buf[12];
+        fs::fread(buf, 11, 1, fd);
+        buf[11] = '\0';
+        ARCH::terminal_write("Content:");
+        ARCH::terminal_write(buf);
+        ARCH::terminal_write("\n");
     }
     auto fd2 = fs::fopen("0:/my_dir/my_file2.txt", "r");
     if (fd2 >= 0) {
         ARCH::terminal_write("We opened a directory file!\n");
+        char buf[13];
+        fs::fread(buf, 12, 1, fd2);
+        buf[12] = '\0';
+        ARCH::terminal_write("Content:");
+        ARCH::terminal_write(buf);
+        ARCH::terminal_write("\n");
     }
 
     enable_interrupts();

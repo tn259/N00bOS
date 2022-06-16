@@ -138,6 +138,17 @@ int fopen(const char* filename, const char* mode) {
     return descriptor->index;
 }
 
+int fread(void* data, size_t block_size, size_t num_blocks, int fd) {
+    if (block_size == 0 || num_blocks == 0 || fd < 0) {
+        return -EINVAL;
+    }
+    auto* file_desc = get_file_descriptor(fd);
+    if (file_desc == nullptr) {
+        return -EINVAL;
+    }
+    return file_desc->fs->read(file_desc->d, file_desc->private_data, block_size, num_blocks, static_cast<char*>(data));
+}
+
 void insert_filesystem(filesystem* fs) {
     filesystem** fs_ptr = nullptr;
     fs_ptr              = get_free_filesystem();
