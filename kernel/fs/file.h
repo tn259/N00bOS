@@ -42,6 +42,8 @@ using fs_read_function = int (*)(disk::disk* d, void* private_data, size_t block
 using fs_seek_function = int (*)(void* private_data, int offset, FILE_SEEK_MODE seek_mode);
 // function to get file_stat info
 using fs_stat_function = int (*)(disk::disk* d, void* private_data, file_stat* stat);
+// function to close a file
+using fs_close_function = int (*)(void* private_data);
 // function to resolve a filesystem that the os supports against a filesystem that the disk supports
 using fs_resolve_function = int (*)(disk::disk* d);
 
@@ -50,6 +52,7 @@ struct filesystem {
     fs_read_function read;
     fs_seek_function seek;
     fs_stat_function stat;
+    fs_close_function close;
     fs_resolve_function resolve;
 
     char name[FS_MAX_PATH_SIZE];
@@ -68,6 +71,7 @@ int fopen(const char* filename, const char* mode);
 int fread(void* data, size_t block_size, size_t num_blocks, int fd);
 int fseek(int fd, int offset, FILE_SEEK_MODE whence);
 int fstat(int fd, file_stat* stat);
+int fclose(int fd);
 filesystem* resolve(disk::disk* disk);
 void insert_filesystem(filesystem* fs);
 

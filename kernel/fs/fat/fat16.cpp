@@ -25,6 +25,7 @@ void* fat16_open(disk::disk* d, path_part* path, FILE_MODE mode);
 int fat16_read(disk::disk* d, void* private_data, size_t block_size, size_t num_blocks, char* output);
 int fat16_seek(void* private_data, int offset, FILE_SEEK_MODE seek_mode);
 int fat16_stat(disk::disk* d, void* private_data, file_stat* stat);
+int fat16_close(void* private_data);
 int fat16_resolve(disk::disk* d);
 
 namespace {
@@ -145,6 +146,7 @@ filesystem fat16_fs = {
     .read    = fat16_read,
     .seek    = fat16_seek,
     .stat    = fat16_stat,
+    .close   = fat16_close,
     .resolve = fat16_resolve};
 
 /**
@@ -419,6 +421,16 @@ void item_free(fat_item* item) {
 }
 
 /**
+ * @brief Deallocates the fat_item_descriptor provided
+ * 
+ * @param item_desc 
+ */
+void item_descriptor_free(fat_item_descriptor* item_desc) {
+    item_free(item_desc->item);
+    mm::heap::kfree(item_desc);
+}
+
+/**
  * @brief Loads/Deserializes a directory from disk 
  * 
  * @param d - the disk
@@ -681,6 +693,15 @@ int fat16_stat(disk::disk* d, void* private_data, file_stat* stat) {
     if (file_item->attribute & FILE_STAT_READ_ONLY) {
         stat->flags = FILE_STAT_READ_ONLY;
     }
+    return 0;
+}
+
+int fat16_close(void* private_data) {
+    auto* fat16_desc = static_cast<fat_item_descriptor*>(private_data);
+    if (fat16_desc->item->type != FAT_ITEM_TYPE_FILE) {
+        return -EINVAL;
+    }
+    item_descriptor_free(fat16_desc);
     return 0;
 }
 

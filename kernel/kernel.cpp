@@ -64,6 +64,10 @@ void kernel_main() {
         char fflagsbuf[3];
         ARCH::terminal_write(itoa(static_cast<int>(stat.flags), fflagsbuf, 10));
         ARCH::terminal_write("\n");
+        // close
+        if (fs::fclose(fd) == 0) {
+            ARCH::terminal_write("Successful close of root file\n");
+        }
     }
     auto fd2 = fs::fopen("0:/my_dir/my_file2.txt", "r");
     if (fd2 >= 0) {
@@ -83,6 +87,10 @@ void kernel_main() {
         ARCH::terminal_write("Content:");
         ARCH::terminal_write(buf2);
         ARCH::terminal_write("\n");
+        // close
+        if (fs::fclose(fd2) == 0) {
+            ARCH::terminal_write("Successful close of directory file\n");
+        }
     }
 
     enable_interrupts();

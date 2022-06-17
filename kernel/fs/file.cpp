@@ -171,6 +171,17 @@ int fstat(int fd, file_stat* stat) {
     return file_desc->fs->stat(file_desc->d, file_desc->private_data, stat);
 }
 
+int fclose(int fd) {
+    if (fd < 0) {
+        return -EINVAL;
+    }
+    auto* file_desc = get_file_descriptor(fd);
+    if (file_desc == nullptr) {
+        return -EINVAL;
+    }
+    return file_desc->fs->close(file_desc->private_data);
+}
+
 void insert_filesystem(filesystem* fs) {
     filesystem** fs_ptr = nullptr;
     fs_ptr              = get_free_filesystem();
