@@ -20,6 +20,13 @@ namespace {
 ARCH::paging::paging_chunk* kernel_paging_chunk;
 } // anonymous namespace
 
+void panic(const char* message) {
+    ARCH::terminal_set_colour(4); // red
+    ARCH::terminal_write(message);
+    while (true) {
+    }
+}
+
 void kernel_main() {
     ARCH::terminal_initialise();
     ARCH::terminal_set_colour(10); // NOLINT(readability-magic-numbers,cppcoreguidelines-avoid-magic-numbers)
@@ -94,4 +101,6 @@ void kernel_main() {
     }
 
     enable_interrupts();
+
+    //panic("Testing panic!");
 }

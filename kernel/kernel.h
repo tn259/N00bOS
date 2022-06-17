@@ -1,6 +1,7 @@
 #pragma once
 
 extern "C" {
+void panic(const char* message);
 void kernel_main();
 }
 
