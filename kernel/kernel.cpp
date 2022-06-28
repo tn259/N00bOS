@@ -1,5 +1,6 @@
 #include "kernel.h"
 
+#include "arch/i386/gdt/gdt.h"
 #include "arch/i386/idt/idt.h"
 #include "arch/i386/io/io.h"
 #include "arch/i386/paging/paging.h"
@@ -10,6 +11,7 @@
 #include "fs/file.h"
 #include "fs/path_parser.h"
 #include "libc/stdlib.h"
+#include "libc/string.h"
 #include "mm/heap/kheap.h"
 
 extern "C" void div_zero();
@@ -17,7 +19,15 @@ extern "C" void div_zero();
 namespace ARCH = arch::i386;
 
 namespace {
+
 ARCH::paging::paging_chunk* kernel_paging_chunk;
+
+ARCH::gdt::gdt_t gdt_real[GDT_TOTAL_SEGMENTS];
+ARCH::gdt::structured_gdt_t structured_gdt[GDT_TOTAL_SEGMENTS] = {
+    {.base = 0x00, .limit = 0x0, .access = 0x0},         // NULL segment
+    {.base = 0x00, .limit = 0xffffffff, .access = 0x9a}, // Kernel code segment (executable)
+    {.base = 0x00, .limit = 0xffffffff, .access = 0x92}};
+
 } // anonymous namespace
 
 void panic(const char* message) {
@@ -31,6 +41,14 @@ void kernel_main() {
     ARCH::terminal_initialise();
     ARCH::terminal_set_colour(10); // NOLINT(readability-magic-numbers,cppcoreguidelines-avoid-magic-numbers)
     ARCH::terminal_write("Welcome to N00bOS\n");
+
+    // load the global descriptor table
+    memset(gdt_real, 0x00, sizeof(gdt_real));
+    //ARCH::gdt::structured_gdt_to_gdt(static_cast<ARCH::gdt::structured_gdt_t*>(structured_gdt), static_cast<ARCH::gdt::gdt_t*>(gdt_real), GDT_TOTAL_SEGMENTS);
+    auto* gdt_ptr            = &gdt_real[0];
+    auto* structured_gdt_ptr = &structured_gdt[0];
+    ARCH::gdt::structured_gdt_to_gdt(structured_gdt_ptr, gdt_ptr, GDT_TOTAL_SEGMENTS);
+    gdt_load(gdt_ptr, sizeof(gdt_real));
 
     ARCH::idt::idt_init();
 
