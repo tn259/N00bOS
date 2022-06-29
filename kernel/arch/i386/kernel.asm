@@ -1,7 +1,7 @@
 [BITS 32] ; https://stackoverflow.com/questions/31989439/nasm-square-brackets-around-directives-like-bits-16 - explanation on square brackets here
 global _start ; exports the _start symbol so can be used by the linker
 global div_zero ; exports the _start symbol so can be used by the linker
-extern kernel_main
+extern kernel_main ; imports the C function
 CODE_SEGMENT equ 0x08
 DATA_SEGMENT equ 0x10
 MASTER_PIC_COMMAND_PORT equ 0x20

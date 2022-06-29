@@ -23,4 +23,7 @@ static const constexpr size_t FS_MAX_FILESYSTEMS   = 512;
 static const constexpr int FS_MAX_FILE_DESCRIPTORS = 512;
 static const constexpr size_t FS_MAX_PATH_SIZE     = 255;
 // GDT
-static const constexpr size_t GDT_TOTAL_SEGMENTS = 3;
+static const constexpr size_t GDT_TOTAL_SEGMENTS = 6;
+static const constexpr size_t GDT_KERNEL_CODE_SELECTOR = 0x08;
+static const constexpr size_t GDT_KERNEL_DATA_SELECTOR = 0x10;
+
