@@ -4,14 +4,14 @@
 -Write python based autotests
 -Make ABI compatible with C++
 -Basic shell, some userspace programs that demonstrate feature set in rust
+-Support C++ OO
+-Support all standard kernel data structures e.g. semaphores, time, process threads etc.
+-Something like CFS
 -Support x86_64
 -Support ARM 32 qemu
 -Support ARM 64 qemu
 -Support ARM raspberry pi
--Support C++ OO
--Support all standard kernel data structures e.g. semaphores, time etc.
 ?Write in Rust
 -Support a modern FS
 -Better paging/caching support
--Something like CFS
 -Write a networking stack - Eth, IP, UDP, ICMP, TCP

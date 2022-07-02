@@ -76,6 +76,22 @@ char* strcpy(char* dst, const char* src) {
     return dst_start;
 }
 
+char* strncpy(char* dst, const char* src, size_t n) {
+    int idx = 0;
+    auto* dst_start = static_cast<char*>(dst);
+    while (idx < n && *src != '\0') {
+        *dst = *src;
+        ++src;
+        ++dst;
+        ++idx;
+    }
+    while (idx < n) {
+        *dst = '\0';
+        ++idx;
+    }
+    return dst_start;
+}
+
 int strncmp(const char* str1, const char* str2, int n) {
     for (int idx = 0; idx < n; ++idx) {
         bool end_str1 = str1[idx] == '\0';

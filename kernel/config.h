@@ -26,4 +26,13 @@ static const constexpr size_t FS_MAX_PATH_SIZE     = 255;
 static const constexpr size_t GDT_TOTAL_SEGMENTS = 6;
 static const constexpr size_t GDT_KERNEL_CODE_SELECTOR = 0x08;
 static const constexpr size_t GDT_KERNEL_DATA_SELECTOR = 0x10;
+// User space
+static const constexpr size_t PROGRAM_VIRTUAL_ADDRESS = 0x400000;
+static const constexpr size_t PROGRAM_USER_PROGRAM_STACK_SIZE = 1024 * 16;
+static const constexpr size_t PROGRAM_VIRTUAL_STACK_ADDRESS_START = 0x3FF000;
+static const constexpr size_t PROGRAM_VIRTUAL_STACK_ADDRESS_END = PROGRAM_VIRTUAL_STACK_ADDRESS_START - PROGRAM_USER_PROGRAM_STACK_SIZE;
+static const constexpr size_t PROGRAM_MAX_ALLOCATIONS = 1024; // number of dynamic allocations per process
+static const constexpr size_t MAX_PROCESSES = 512;
+static const constexpr uint8_t USER_DATA_SEGMENT = 0x23;
+static const constexpr uint8_t USER_CODE_SEGMENT = 0x1b; 
 

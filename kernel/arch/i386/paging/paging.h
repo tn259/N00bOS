@@ -77,6 +77,13 @@ struct paging_chunk {
 paging_chunk* paging_new(uint8_t flags);
 
 /**
+ * @brief Deallocate a 4GB paging memory space 
+ * 
+ * @param paging 
+ */
+void paging_free(paging_chunk* paging);
+
+/**
  * @brief Loads a new 4GB memory space 
  * 
  * @param chunk - the 4GB memory space
@@ -92,6 +99,24 @@ void paging_switch(paging_chunk* chunk);
  * @return 0 on success 
  */
 int paging_set(const PAGING_ENTRY* directory, void* virtual_address, PAGING_ENTRY value);
+
+/**
+ * @brief - Maps a virt address for a page directory to a physical memory region
+ * 
+ * @param directory 
+ * @param virtual_address 
+ * @param physical_address 
+ * @param physical_address_end 
+ * @param flags 
+ * @return int - 0 on success
+ */
+int paging_map(const PAGING_ENTRY* directory, void* virtual_address, void* physical_address, void* physical_address_end, int flags);
+
+/**
+ * @brief Aligns an input address up to a page boundary
+ * 
+ */
+void* paging_align(void* address);
 
 } // namespace arch::i386::paging
 

@@ -14,6 +14,6 @@ int ERROR_I(T* value) {
     return reinterpret_cast<int>(value);
 }
 template <typename T>
-int ISERR(T* value) {
+bool ISERR(T* value) {
     return (reinterpret_cast<int>(value) < 0);
 }

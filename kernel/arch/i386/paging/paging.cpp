@@ -6,6 +6,7 @@
 namespace arch::i386::paging {
 
 namespace {
+
 PAGING_ENTRY* current_directory;
 
 /**
@@ -47,6 +48,21 @@ int paging_get_idxs(void* virtual_address, PAGING_ENTRY* directory_idx, PAGING_E
     *table_idx     = (reinterpret_cast<PAGING_ENTRY>(virtual_address) % (PAGING_TOTAL_ENTRIES_PER_TABLE * PAGING_PAGE_SIZE) / PAGING_PAGE_SIZE);
     return 0;
 }
+
+int paging_map(const PAGING_ENTRY* directory, uint8_t* virtual_address, uint8_t* physical_address, int total_pages, int flags) {
+    int result = 0;
+    for (int page_idx = 0; page_idx < total_pages; ++page_idx) {
+        auto entry = reinterpret_cast<PAGING_ENTRY>(physical_address) | flags;
+        result = paging_set(directory, virtual_address, entry);
+        if (result != 0) {
+            break;
+        }
+        virtual_address += PAGING_PAGE_SIZE;
+        physical_address += PAGING_PAGE_SIZE;
+    }
+    return result;
+}
+
 } // anonymous namespace
 
 paging_chunk* paging_new(uint8_t flags) {
@@ -67,6 +83,17 @@ paging_chunk* paging_new(uint8_t flags) {
     return chunk;
 }
 
+void paging_free(paging_chunk* paging) {
+    for (size_t idx = 0; idx < PAGING_TOTAL_ENTRIES_PER_TABLE; ++idx) {
+        auto dir_entry = paging->directory_entry[idx];
+        auto* table = reinterpret_cast<PAGING_ENTRY*>(dir_entry & PAGING_ADDRESS_MASK);
+        mm::heap::kfree(table);
+    }
+    mm::heap::kfree(paging->directory_entry);
+    mm::heap::kfree(paging);
+}
+
+
 void paging_switch(paging_chunk* chunk) {
     paging_load_directory(chunk->directory_entry);
     current_directory = chunk->directory_entry;
@@ -85,6 +112,37 @@ int paging_set(const PAGING_ENTRY* directory, void* virtual_address, PAGING_ENTR
     auto* table              = reinterpret_cast<PAGING_ENTRY*>(table_entry & PAGING_ADDRESS_MASK);
     table[table_idx]         = value;
     return 0;
+}
+
+int paging_map(const PAGING_ENTRY* directory, void* virtual_address, void* physical_address, void* physical_address_end, int flags) {
+    if (!paging_is_aligned(virtual_address)) {
+        return -EINVAL;
+    }
+    if (!paging_is_aligned(physical_address)) {
+        return -EINVAL;
+    }
+    if (!paging_is_aligned(physical_address_end)) {
+        return -EINVAL;
+    }
+
+    if (static_cast<PAGING_ENTRY*>(physical_address_end) < static_cast<PAGING_ENTRY*>(physical_address)) {
+        return -EINVAL;
+    }
+
+    auto total_bytes = static_cast<PAGING_ENTRY*>(physical_address_end) - static_cast<PAGING_ENTRY*>(physical_address);
+    auto total_pages = total_bytes / PAGING_PAGE_SIZE;
+
+    return paging_map(directory, static_cast<uint8_t*>(virtual_address), static_cast<uint8_t*>(physical_address), total_pages, flags);
+}
+
+void* paging_align(void* address) {
+    auto address_entry = reinterpret_cast<PAGING_ENTRY>(address);
+    if ((address_entry % PAGING_PAGE_SIZE) != 0) {
+        auto ptr = static_cast<uint8_t*>(address);
+        ptr += (address_entry - (address_entry % PAGING_PAGE_SIZE) + PAGING_PAGE_SIZE);
+        return static_cast<void*>(ptr);
+    }
+    return address;
 }
 
 } // namespace arch::i386::paging

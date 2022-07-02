@@ -62,6 +62,20 @@ size_t strlen(const char* str);
 char* strcpy(char* dst, const char* src);
 
 /**
+ * @brief - copy string contents from src to dst up to n bytes only.
+ *          If src as a NULL terminated string is shorter than n then dst is
+ *          padded with NULL bytes up to length n.
+ *          If src as a NULL terminated string is longer than n then dst is not
+ *          NULL terminated after copying n bytes.
+ * 
+ * @param dst - dst output string
+ * @param src - src input string
+ * @param n - num bytes to copy
+ * @return char* - output pointer to the new dst
+ */
+char* strncpy(char* dst, const char* src, size_t n);
+
+/**
  * @brief compare to strings up to a length n or a null terminator - whichever is first
  * 
  * @param mem1 - first string
