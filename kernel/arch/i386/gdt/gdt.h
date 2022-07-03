@@ -16,7 +16,7 @@ struct gdt_t {
     uint8_t access;
     uint8_t high_flags;
     uint8_t base_high;
-};
+} __attribute__((packed));
 
 /**
  * @brief gdt entry with fields in logical structure to set easily used by the kernel
