@@ -16,7 +16,7 @@ PAGING_ENTRY* current_directory;
  * @return true 
  * @return false 
  */
-bool paging_is_aligned(void* address) {
+bool paging_is_aligned(const void* address) {
     return (reinterpret_cast<PAGING_ENTRY>(address) % PAGING_PAGE_SIZE) == 0;
 }
 
@@ -49,11 +49,11 @@ int paging_get_idxs(void* virtual_address, PAGING_ENTRY* directory_idx, PAGING_E
     return 0;
 }
 
-int paging_map(const PAGING_ENTRY* directory, uint8_t* virtual_address, uint8_t* physical_address, int total_pages, int flags) {
+int paging_map(const PAGING_ENTRY* directory, uint8_t* virtual_address, const uint8_t* physical_address, int total_pages, int flags) {
     int result = 0;
     for (int page_idx = 0; page_idx < total_pages; ++page_idx) {
         auto entry = reinterpret_cast<PAGING_ENTRY>(physical_address) | flags;
-        result = paging_set(directory, virtual_address, entry);
+        result     = paging_set(directory, virtual_address, entry);
         if (result != 0) {
             break;
         }
@@ -86,13 +86,12 @@ paging_chunk* paging_new(uint8_t flags) {
 void paging_free(paging_chunk* paging) {
     for (size_t idx = 0; idx < PAGING_TOTAL_ENTRIES_PER_TABLE; ++idx) {
         auto dir_entry = paging->directory_entry[idx];
-        auto* table = reinterpret_cast<PAGING_ENTRY*>(dir_entry & PAGING_ADDRESS_MASK);
+        auto* table    = reinterpret_cast<PAGING_ENTRY*>(dir_entry & PAGING_ADDRESS_MASK);
         mm::heap::kfree(table);
     }
     mm::heap::kfree(paging->directory_entry);
     mm::heap::kfree(paging);
 }
-
 
 void paging_switch(paging_chunk* chunk) {
     paging_load_directory(chunk->directory_entry);
@@ -114,7 +113,7 @@ int paging_set(const PAGING_ENTRY* directory, void* virtual_address, PAGING_ENTR
     return 0;
 }
 
-int paging_map(const PAGING_ENTRY* directory, void* virtual_address, void* physical_address, void* physical_address_end, int flags) {
+int paging_map(const PAGING_ENTRY* directory, void* virtual_address, const void* physical_address, void* physical_address_end, int flags) {
     if (!paging_is_aligned(virtual_address)) {
         return -EINVAL;
     }
@@ -125,20 +124,20 @@ int paging_map(const PAGING_ENTRY* directory, void* virtual_address, void* physi
         return -EINVAL;
     }
 
-    if (static_cast<PAGING_ENTRY*>(physical_address_end) < static_cast<PAGING_ENTRY*>(physical_address)) {
+    if (static_cast<PAGING_ENTRY*>(physical_address_end) < static_cast<const PAGING_ENTRY*>(physical_address)) {
         return -EINVAL;
     }
 
-    auto total_bytes = static_cast<PAGING_ENTRY*>(physical_address_end) - static_cast<PAGING_ENTRY*>(physical_address);
+    auto total_bytes = static_cast<PAGING_ENTRY*>(physical_address_end) - static_cast<const PAGING_ENTRY*>(physical_address);
     auto total_pages = total_bytes / PAGING_PAGE_SIZE;
 
-    return paging_map(directory, static_cast<uint8_t*>(virtual_address), static_cast<uint8_t*>(physical_address), total_pages, flags);
+    return paging_map(directory, static_cast<uint8_t*>(virtual_address), static_cast<const uint8_t*>(physical_address), total_pages, flags);
 }
 
 void* paging_align(void* address) {
     auto address_entry = reinterpret_cast<PAGING_ENTRY>(address);
     if ((address_entry % PAGING_PAGE_SIZE) != 0) {
-        auto ptr = static_cast<uint8_t*>(address);
+        auto* ptr = static_cast<uint8_t*>(address);
         ptr += (address_entry - (address_entry % PAGING_PAGE_SIZE) + PAGING_PAGE_SIZE);
         return static_cast<void*>(ptr);
     }

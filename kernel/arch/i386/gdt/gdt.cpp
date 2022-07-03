@@ -12,13 +12,13 @@ namespace arch::i386::gdt {
      */
 void encode_gdt_entry(uint8_t* target_entry, const structured_gdt_t& source) {
     /*struct gdt_t {
-            uint16_t segment;
-            uint16_t base_low;
-            uint8_t base_middle;
-            uint8_t access;
-            uint8_t high_flags;
-            uint8_t base_high;
-        };*/
+        uint16_t segment;
+        uint16_t base_low;
+        uint8_t base_middle;
+        uint8_t access;
+        uint8_t high_flags;
+        uint8_t base_high;
+    };*/
     auto& segment0    = target_entry[0];
     auto& segment1    = target_entry[1];
     auto& base_low0   = target_entry[2];

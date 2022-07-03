@@ -1,8 +1,8 @@
 #pragma once
 
-#include "arch/i386/paging/paging.h"
-
 #include <stdint.h>
+
+#include "arch/i386/paging/paging.h"
 
 namespace arch::i386::task {
 
@@ -39,4 +39,4 @@ task_t* current_task();
 task_t* get_next_task();
 void free_task(task_t* task);
 
-}
+} // namespace arch::i386::task

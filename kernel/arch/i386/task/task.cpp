@@ -1,21 +1,20 @@
 #include "task.h"
-#include "paging/paging.h"
 
-#include "mm/heap/kheap.h"
-
-#include "status.h"
 #include "config.h"
 #include "kernel.h"
-
 #include "libc/string.h"
+#include "mm/heap/kheap.h"
+#include "paging/paging.h"
+#include "process.h"
+#include "status.h"
 
 namespace arch::i386::task {
 
 namespace {
 
 task_t* current = nullptr;
-task_t* tail = nullptr;
-task_t* head = nullptr;
+task_t* tail    = nullptr;
+task_t* head    = nullptr;
 
 /**
  * @brief Removes a task from the linked list of tasks 
@@ -45,21 +44,20 @@ void remove_task(task_t* task) {
 }
 
 int init_task(task_t* task) {
-    memset(task, 0x00, sizeof(task));
+    memset(task, 0x00, sizeof(task_t));
     task->page_directory = paging::paging_new(paging::PAGING_IS_PRESENT | paging::PAGING_ACCESS_FROM_ALL);
     if (task->page_directory == nullptr) {
         return -EIO;
     }
 
-    task->reg.ip = PROGRAM_VIRTUAL_ADDRESS;
-    task->reg.ss = USER_DATA_SEGMENT;
+    task->reg.ip  = PROGRAM_VIRTUAL_ADDRESS;
+    task->reg.ss  = USER_DATA_SEGMENT;
     task->reg.esp = PROGRAM_VIRTUAL_STACK_ADDRESS_START;
 
     return 0;
 }
 
-}  // anonymous namespace
-
+} // anonymous namespace
 
 task_t* current_task() {
     return current;
@@ -80,12 +78,12 @@ task_t* new_task(process* proc) {
     if (head == nullptr) {
         head = task;
         tail = task;
-        return 0;
+        return nullptr;
     }
 
     tail->next = task;
     task->prev = tail;
-    tail = task;
+    tail       = task;
 
     proc->task = task;
 
@@ -106,5 +104,4 @@ void free_task(task_t* task) {
     mm::heap::kfree(task);
 }
 
-
-}
+} // namespace arch::i386::task

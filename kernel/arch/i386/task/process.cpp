@@ -1,15 +1,14 @@
 #include "process.h"
 
-#include "task.h"
-#include "config.h"
-#include "status.h"
-#include "kernel.h"
-
-#include "fs/file.h"
-#include "mm/heap/kheap.h"
-#include "libc/string.h"
-
 #include <stdint.h>
+
+#include "config.h"
+#include "fs/file.h"
+#include "kernel.h"
+#include "libc/string.h"
+#include "mm/heap/kheap.h"
+#include "status.h"
+#include "task.h"
 
 namespace arch::i386::task {
 
@@ -30,10 +29,10 @@ void init_process(process* proc) {
  * @return int 
  */
 int load_binary(const char* filename, process* proc) {
-    int result = 0;
+    int result       = 0;
     int close_result = 0;
     fs::file_stat stat;
-    void* program_data_ptr;
+    void* program_data_ptr = nullptr;
     // Read file
     int fd = fs::fopen(filename, "r");
     if (fd < 0) {
@@ -57,7 +56,7 @@ int load_binary(const char* filename, process* proc) {
     }
 
     proc->phys_mem = program_data_ptr;
-    proc->size = stat.filesize;
+    proc->size     = stat.filesize;
 
 out:
     close_result = fs::fclose(fd);
@@ -77,7 +76,7 @@ out:
 int load_data(const char* filename, process* proc) {
     // TODO(tn259) implement other exe file formats i.e. ELF
     int result = 0;
-    result = load_binary(filename, proc);
+    result     = load_binary(filename, proc);
     return result;
 }
 
@@ -88,12 +87,12 @@ int load_data(const char* filename, process* proc) {
  * @return int - 0 on success
  */
 int mmap_binary(process* proc) {
-    auto* page_directory = proc->task->page_directory;
-    auto* virt = reinterpret_cast<void*>(PROGRAM_VIRTUAL_ADDRESS);
-    auto* phys = proc->phys_mem;
-    auto* phys_end = reinterpret_cast<void*>(paging::paging_align(phys + proc->size));
-    int flags = paging::PAGING_IS_PRESENT | paging::PAGING_ACCESS_FROM_ALL | paging::PAGING_IS_WRITABLE;
-    return paging::paging_map(proc->task->page_directory, virt, phys, phys_end, flags);
+    auto* page_directory = proc->task->page_directory->directory_entry;
+    auto* virt           = reinterpret_cast<void*>(PROGRAM_VIRTUAL_ADDRESS);
+    auto* phys_ptr       = static_cast<uint8_t*>(proc->phys_mem);
+    auto* phys_end       = reinterpret_cast<void*>(paging::paging_align(phys_ptr + proc->size));
+    int flags            = paging::PAGING_IS_PRESENT | paging::PAGING_ACCESS_FROM_ALL | paging::PAGING_IS_WRITABLE;
+    return paging::paging_map(page_directory, virt, proc->phys_mem, phys_end, flags);
 }
 
 /**
@@ -105,11 +104,11 @@ int mmap_binary(process* proc) {
 int mmap_process(process* proc) {
     // TODO(tn259) implement other exe file formats i.e. ELF
     int result = 0;
-    result = mmap_binary(proc);
+    result     = mmap_binary(proc);
     return result;
 }
 
-}  // anonymous namespace
+} // anonymous namespace
 
 /**
  * @brief Get the current running process 
@@ -134,6 +133,31 @@ process* get_process(int pid) {
 }
 
 /**
+ * @brief Deallocate process
+ * 
+ * @param proc 
+ */
+void free_process(process* proc) {
+    if (proc->task != nullptr) {
+        free_task(proc->task);
+    }
+    for (void* allocation : proc->allocations) {
+        if (allocation != nullptr) {
+            mm::heap::kfree(allocation);
+        } else {
+            break;
+        }
+    }
+    if (proc->phys_mem != nullptr) {
+        mm::heap::kfree(static_cast<void*>(proc->phys_mem));
+    }
+    if (proc->stack != nullptr) {
+        mm::heap::kfree(static_cast<void*>(proc->stack));
+    }
+    mm::heap::kfree(static_cast<void*>(proc));
+}
+
+/**
  * @brief Loads exe filename as a process identified by pid
  * 
  * @param filename 
@@ -143,7 +167,7 @@ process* get_process(int pid) {
  */
 int load_process(const char* filename, process** proc, int pid) {
     // Check no process with pid already exisits
-    if (get_process(pid) != 0) {
+    if (get_process(pid) != nullptr) {
         return -EINVAL;
     }
 
@@ -155,9 +179,9 @@ int load_process(const char* filename, process** proc, int pid) {
     init_process(tmp_proc);
 
     // Load program data from file
-    void* program_stack_ptr;
-    task_t* task;
-    int result = load_data(filename, tmp_proc);
+    void* program_stack_ptr = nullptr;
+    task_t* task            = nullptr;
+    int result              = load_data(filename, tmp_proc);
     if (result < 0) {
         goto out;
     }
@@ -169,10 +193,10 @@ int load_process(const char* filename, process** proc, int pid) {
         goto out;
     }
 
-    // Assign filename 
-    strncpy(tmp_proc->name, filename, sizeof(tmp_proc->name));
+    // Assign filename
+    strncpy(static_cast<char*>(tmp_proc->name), filename, sizeof(tmp_proc->name));
     tmp_proc->stack = program_stack_ptr;
-    tmp_proc->pid = pid;
+    tmp_proc->pid   = pid;
 
     // New task for process
     task = new_task(tmp_proc);
@@ -185,16 +209,16 @@ int load_process(const char* filename, process** proc, int pid) {
     // map virtual to physical address space of process
     result = mmap_process(tmp_proc);
 
-    *proc = tmp_proc;
+    *proc          = tmp_proc;
     processes[pid] = tmp_proc;
-
 
 out:
     if (result < 0) {
         if (tmp_proc != nullptr) {
-
+            free_process(tmp_proc);
         }
     }
+    return result;
 }
 
-} // arch::i386::task
+} // namespace arch::i386::task

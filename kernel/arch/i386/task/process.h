@@ -1,9 +1,9 @@
 #pragma once
 
-#include "task.h"
-#include "config.h"
-
 #include <stdint.h>
+
+#include "config.h"
+#include "task.h"
 
 namespace arch::i386::task {
 
@@ -25,4 +25,4 @@ struct process {
     void* stack;
 };
 
-}
+} // namespace arch::i386::task

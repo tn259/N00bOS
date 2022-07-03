@@ -110,7 +110,7 @@ int paging_set(const PAGING_ENTRY* directory, void* virtual_address, PAGING_ENTR
  * @param flags 
  * @return int - 0 on success
  */
-int paging_map(const PAGING_ENTRY* directory, void* virtual_address, void* physical_address, void* physical_address_end, int flags);
+int paging_map(const PAGING_ENTRY* directory, void* virtual_address, const void* physical_address, void* physical_address_end, int flags);
 
 /**
  * @brief Aligns an input address up to a page boundary

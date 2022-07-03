@@ -4,8 +4,8 @@
 #include "arch/i386/idt/idt.h"
 #include "arch/i386/io/io.h"
 #include "arch/i386/paging/paging.h"
-#include "arch/i386/tty.h"
 #include "arch/i386/task/tss.h"
+#include "arch/i386/tty.h"
 #include "disk/disk.h"
 #include "disk/disk_streamer.h"
 #include "drivers/ata/ata.h"
@@ -23,17 +23,16 @@ namespace {
 
 ARCH::paging::paging_chunk* kernel_paging_chunk;
 
-
 // https://en.wikipedia.org/wiki/Segment_descriptor for meaning of each field
 ARCH::task::tss_t tss;
 ARCH::gdt::gdt_t gdt_real[GDT_TOTAL_SEGMENTS];
 ARCH::gdt::structured_gdt_t structured_gdt[GDT_TOTAL_SEGMENTS] = {
-    {.base = 0x00, .limit = 0x0, .access = 0x0},           // NULL segment
-    {.base = 0x00, .limit = 0xffffffff, .access = 0x9a},   // Kernel code segment (executable)
-    {.base = 0x00, .limit = 0xffffffff, .access = 0x92},  // Kernel data segment (read/write)
-    {.base = 0x00, .limit = 0xffffffff, .access = 0xf8},  // User code segment 
-    {.base = 0x00, .limit = 0xffffffff, .access = 0xf2},  // User data segment
-    {.base = reinterpret_cast<uint32_t>(&tss), .limit = sizeof(tss), .access = 0xe9}  // TSS segment
+    {.base = 0x00, .limit = 0x0, .access = 0x0},                                     // NULL segment
+    {.base = 0x00, .limit = 0xffffffff, .access = 0x9a},                             // Kernel code segment (executable)
+    {.base = 0x00, .limit = 0xffffffff, .access = 0x92},                             // Kernel data segment (read/write)
+    {.base = 0x00, .limit = 0xffffffff, .access = 0xf8},                             // User code segment
+    {.base = 0x00, .limit = 0xffffffff, .access = 0xf2},                             // User data segment
+    {.base = reinterpret_cast<uint32_t>(&tss), .limit = sizeof(tss), .access = 0xe9} // TSS segment
 };
 
 } // anonymous namespace
@@ -61,9 +60,9 @@ void kernel_main() {
 
     // load the tss
     memset(&tss, 0x00, sizeof(tss));
-    tss.esp0 = 0x600000; // TODO (tn259) why 0x60000?
-    tss.ss0 = GDT_KERNEL_DATA_SELECTOR; // Kernel data segement is 0x10 bytes offset from the start of the gdt defined above
-    tss_load(0x28); // TSS segment is 0x28 bytes offset from the start of the gdt defined above
+    tss.esp0 = 0x600000;                 // TODO (tn259) why 0x60000?
+    tss.ss0  = GDT_KERNEL_DATA_SELECTOR; // Kernel data segement is 0x10 bytes offset from the start of the gdt defined above
+    tss_load(0x28);                      // TSS segment is 0x28 bytes offset from the start of the gdt defined above
 
     mm::heap::kheap_init();
 

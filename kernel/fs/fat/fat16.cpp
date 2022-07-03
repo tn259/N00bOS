@@ -682,7 +682,7 @@ int fat16_seek(void* private_data, int offset, FILE_SEEK_MODE seek_mode) {
     return 0;
 }
 
-int fat16_stat(disk::disk* d, void* private_data, file_stat* stat) {
+int fat16_stat(disk::disk* /*d*/, void* private_data, file_stat* stat) {
     auto* fat16_desc = static_cast<fat_item_descriptor*>(private_data);
     if (fat16_desc->item->type != FAT_ITEM_TYPE_FILE) {
         return -EINVAL;

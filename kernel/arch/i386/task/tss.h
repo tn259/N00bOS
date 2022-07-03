@@ -34,7 +34,7 @@ struct tss_t {
     uint32_t iopb;
 } __attribute__((packed));
 
-}
+} // namespace arch::i386::task
 
 extern "C" {
 void tss_load(int tss_segment);

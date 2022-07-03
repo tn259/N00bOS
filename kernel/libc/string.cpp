@@ -77,7 +77,7 @@ char* strcpy(char* dst, const char* src) {
 }
 
 char* strncpy(char* dst, const char* src, size_t n) {
-    int idx = 0;
+    size_t idx      = 0;
     auto* dst_start = static_cast<char*>(dst);
     while (idx < n && *src != '\0') {
         *dst = *src;
