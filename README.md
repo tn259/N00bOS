@@ -1,5 +1,5 @@
 # N00bOS
-Build an OS to learn
+WIP - Building an OS to learn about OS concepts
 
 ## Development workflow
 A Dockerfile is available for building, running and testing N00bOS.
